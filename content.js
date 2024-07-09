@@ -67,15 +67,16 @@ const sites = {
                 selector: '[data-testid="primaryColumn"] [data-testid="cellInnerDiv"]'
             },
             {
-                name: 'sidebar-content',
-                selector: '[data-testid="sidebarColumn"] > div > div:not(:first-child)'
+                name: 'explore',
+                selector: '[data-testid="sidebarColumn"] [aria-label="Search and explore"]'
+            },
+            {
+                name: 'who-to-follow',
+                selector: '[data-testid="sidebarColumn"] [aria-label="Who to follow"]'
             }
         ],
         isNotificationsPage: function() {
             return window.location.pathname.includes('/notifications');
-        },
-        getTweetBox: function() {
-            return document.querySelector('[data-testid="tweetTextarea_0"]');
         }
     }
 };
@@ -89,12 +90,11 @@ function createToggleButton(element, groupName, fixed = false) {
     container.setAttribute('data-group', groupName);
 
     if (fixed) {
-        container.style.position = 'sticky';
-        container.style.top = '0';
+        container.style.position = 'absolute';
+        container.style.top = '50%';
+        container.style.left = '50%';
+        container.style.transform = 'translate(-50%, -50%)';
         container.style.zIndex = '9999';
-        container.style.backgroundColor = 'white';
-        container.style.padding = '10px';
-        container.style.textAlign = 'center';
     }
 
     const button = document.createElement('button');
@@ -109,13 +109,7 @@ function createToggleButton(element, groupName, fixed = false) {
     container.appendChild(text);
 
     if (fixed) {
-        const tweetBox = sites.twitter.getTweetBox();
-        if (tweetBox) {
-            const tweetBoxContainer = tweetBox.closest('[data-testid="primaryColumn"] > div > div');
-            if (tweetBoxContainer) {
-                tweetBoxContainer.parentNode.insertBefore(container, tweetBoxContainer.nextSibling);
-            }
-        }
+        element.appendChild(container);
     } else {
         element.parentNode.insertBefore(container, element);
     }
@@ -241,6 +235,9 @@ function showAllContent() {
             });
         });
     }
+    
+    const buttons = document.querySelectorAll('.algorithm-escape-toggle-container');
+    buttons.forEach(button => button.remove());
 }
 
 function initializeSite() {
@@ -302,7 +299,10 @@ function initializeSite() {
             }
         });
         if (contentFound && !document.querySelector('.algorithm-escape-toggle-container[data-group="twitter"]')) {
-            createToggleButton(document.body, 'twitter', true);
+            const mainColumn = document.querySelector('[data-testid="primaryColumn"]');
+            if (mainColumn) {
+                createToggleButton(mainColumn, 'twitter', true);
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Escape the Algorithm | YouTube Feed Remover",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Hide your feed and other algorithmically generated content on YouTube, Facebook and more to regain control of your time online",
   "permissions": ["storage"],
   "host_permissions": [
