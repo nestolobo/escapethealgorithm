@@ -9,7 +9,9 @@
     "*://*.facebook.com/*",
     "*://*.instagram.com/*",
     "*://*.twitter.com/*",
-    "*://*.x.com/*"
+    "*://*.x.com/*",
+    "*://*.tiktok.com/*"
+
   ],
   "action": {
     "default_popup": "popup.html",
@@ -26,7 +28,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.twitter.com/*", "*://*.x.com/*"],
+      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.twitter.com/*", "*://*.x.com/*", "*://*.tiktok.com/*"
+],
       "css": ["styles.css"],
       "js": ["content.js"]
     }

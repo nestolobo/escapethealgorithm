@@ -3,15 +3,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const facebookToggle = document.getElementById('facebook-toggle');
   const instagramToggle = document.getElementById('instagram-toggle');
   const twitterToggle = document.getElementById('twitter-toggle');
-
+  const tiktokToggle = document.getElementById('tiktok-toggle');
 
   // Load saved settings
-  chrome.storage.sync.get(['youtube', 'facebook', 'instagram'], function(result) {
+  chrome.storage.sync.get(['youtube', 'facebook', 'instagram', 'twitter', 'tiktok'], function(result) {
     youtubeToggle.checked = result.youtube !== false;
     facebookToggle.checked = result.facebook !== false;
     instagramToggle.checked = result.instagram !== false;
     twitterToggle.checked = result.twitter !== false;
-
+    tiktokToggle.checked = result.tiktok !== false;
   });
 
   // Save settings when toggled
@@ -29,5 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   twitterToggle.addEventListener('change', function() {
     chrome.storage.sync.set({twitter: this.checked});
+  });
+
+  tiktokToggle.addEventListener('change', function() {
+    chrome.storage.sync.set({tiktok: this.checked});
   });
 });
