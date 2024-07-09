@@ -121,7 +121,7 @@ function createToggleButton(element, groupName, fixed = false) {
     container.className = 'algorithm-escape-toggle-container';
     container.setAttribute('data-group', groupName);
 
-    if (fixed || groupName.includes('tiktok')) {
+    if (fixed || groupName === 'tiktok-feed') {
         container.style.position = 'fixed';
         container.style.top = '60px';
         container.style.left = '50%';
@@ -130,6 +130,7 @@ function createToggleButton(element, groupName, fixed = false) {
         container.style.backgroundColor = 'white';
         container.style.padding = '10px';
         container.style.borderRadius = '5px';
+        container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
     }
 
     const button = document.createElement('button');
@@ -138,12 +139,16 @@ function createToggleButton(element, groupName, fixed = false) {
 
     const text = document.createElement('p');
     text.className = 'algorithm-escape-text';
-    text.textContent = `Escaping ${groupName.replace('-feed', '')} 😎`;
+    text.textContent = 'You are escaping the algorithm 😎';
 
     container.appendChild(button);
     container.appendChild(text);
 
-    document.body.appendChild(container);
+    if (fixed || groupName === 'tiktok-feed') {
+        document.body.appendChild(container);
+    } else {
+        element.parentNode.insertBefore(container, element);
+    }
 
     button.addEventListener('click', () => toggleContent(groupName));
     return button;
