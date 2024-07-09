@@ -13,13 +13,9 @@ const sites = {
                 selector: '.ytp-endscreen-content, .ytp-ce-element'
             },
             {
-                name: 'shorts',
-                selector: 'ytd-reel-shelf-renderer'
-            },
-            {
-                name: 'shorts-feed',
-                selector: 'ytd-shorts#shorts-container'
-            }
+              name: 'shorts-feed',
+              selector: '#page-manager > ytd-shorts'
+          }
         ],
         channelVideosSelector: '#contents.ytd-rich-grid-renderer',
         additionalActions: function() {
@@ -191,15 +187,19 @@ function hideOrShowContent(groupName) {
         if (sites.youtube.isAllowedPage()) {
             return;
         }
-        const group = sites.youtube.selectorGroups.find(g => g.name === groupName);
-        if (group) {
-            const elements = document.querySelectorAll(group.selector);
-            elements.forEach(element => {
-                element.classList.toggle('hidden-by-extension', isContentHidden);
-            });
-            const button = document.querySelector(`.algorithm-escape-toggle-container[data-group="${groupName}"] .algorithm-escape-toggle`);
-            updateToggleButton(button);
+        if (groupName === 'shorts-feed') {
+            hideYoutubeShorts();
+        } else {
+            const group = sites.youtube.selectorGroups.find(g => g.name === groupName);
+            if (group) {
+                const elements = document.querySelectorAll(group.selector);
+                elements.forEach(element => {
+                    element.classList.toggle('hidden-by-extension', isContentHidden);
+                });
+            }
         }
+        const button = document.querySelector(`.algorithm-escape-toggle-container[data-group="${groupName}"] .algorithm-escape-toggle`);
+        updateToggleButton(button);
 
         if (isContentHidden) {
             sites.youtube.additionalActions();
@@ -311,9 +311,18 @@ function showAllContent() {
 }
 
 function hideYoutubeShorts() {
-    const shortsContainer = document.querySelector('ytd-shorts#shorts-container');
+    const shortsContainer = document.querySelector('#page-manager > ytd-shorts');
     if (shortsContainer) {
-        shortsContainer.style.display = 'none';
+        shortsContainer.style.display = isContentHidden ? 'none' : '';
+        const videos = shortsContainer.querySelectorAll('video');
+        videos.forEach(video => {
+            if (isContentHidden) {
+                video.pause();
+                video.muted = true;
+            } else {
+                video.muted = false;
+            }
+        });
         if (!document.querySelector('.algorithm-escape-toggle-container[data-group="shorts-feed"]')) {
             createToggleButton(document.body, 'shorts-feed', true);
         }
@@ -332,8 +341,10 @@ function initializeSite() {
                 const elements = document.querySelectorAll(group.selector);
                 if (elements.length > 0) {
                     elements.forEach(element => {
-                        if (!element.classList.contains('hidden-by-extension')) {
-                            element.classList.add('hidden-by-extension');
+                        if (group.name === 'shorts-feed') {
+                            element.style.display = isContentHidden ? 'none' : '';
+                        } else {
+                            element.classList.toggle('hidden-by-extension', isContentHidden);
                         }
                     });
                     createToggleButton(elements[0], group.name);
@@ -344,7 +355,7 @@ function initializeSite() {
         // Always try to hide Shorts shelf
         const shortsShelf = document.querySelector('ytd-reel-shelf-renderer');
         if (shortsShelf) {
-            shortsShelf.style.display = 'none';
+            shortsShelf.style.display = isContentHidden ? 'none' : '';
         }
     } else if (currentSite === 'facebook') {
         const newsfeed = sites.facebook.getNewsfeed();
@@ -443,17 +454,23 @@ if (getCurrentSite() === 'youtube') {
 
 function periodicShortsCheck() {
     if (getCurrentSite() === 'youtube') {
-        const shortsContainer = document.querySelector('ytd-shorts#shorts-container');
+        const shortsContainer = document.querySelector('#page-manager > ytd-shorts');
         if (shortsContainer) {
-            shortsContainer.style.display = 'none';
+            shortsContainer.style.display = isContentHidden ? 'none' : '';
+            const videos = shortsContainer.querySelectorAll('video');
+            videos.forEach(video => {
+                if (isContentHidden) {
+                    video.pause();
+                    video.muted = true;
+                }
+            });
         }
         const shortsShelf = document.querySelector('ytd-reel-shelf-renderer');
         if (shortsShelf) {
-            shortsShelf.style.display = 'none';
+            shortsShelf.style.display = isContentHidden ? 'none' : '';
         }
     }
 }
-
 // Run the periodic check every second
 setInterval(periodicShortsCheck, 1000);
 
