@@ -97,6 +97,14 @@ const sites = {
             {
                 name: 'main-feed',
                 selector: '#main-content-homepage_hot'
+            },
+            {
+                name: 'explore-feed',
+                selector: '#main-content-explore_page'
+            },
+            {
+                name: 'live-feed',
+                selector: '#tiktok-live-main-container-id'
             }
         ],
         isAllowedPage: function() {
@@ -113,7 +121,7 @@ function createToggleButton(element, groupName, fixed = false) {
     container.className = 'algorithm-escape-toggle-container';
     container.setAttribute('data-group', groupName);
 
-    if (fixed || groupName === 'tiktok-feed') {
+    if (fixed || groupName.includes('tiktok')) {
         container.style.position = 'fixed';
         container.style.top = '60px';
         container.style.left = '50%';
@@ -122,7 +130,6 @@ function createToggleButton(element, groupName, fixed = false) {
         container.style.backgroundColor = 'white';
         container.style.padding = '10px';
         container.style.borderRadius = '5px';
-        container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
     }
 
     const button = document.createElement('button');
@@ -131,16 +138,12 @@ function createToggleButton(element, groupName, fixed = false) {
 
     const text = document.createElement('p');
     text.className = 'algorithm-escape-text';
-    text.textContent = 'You are escaping the algorithm 😎';
+    text.textContent = `Escaping ${groupName.replace('-feed', '')} 😎`;
 
     container.appendChild(button);
     container.appendChild(text);
 
-    if (fixed || groupName === 'tiktok-feed') {
-        document.body.appendChild(container);
-    } else {
-        element.parentNode.insertBefore(container, element);
-    }
+    document.body.appendChild(container);
 
     button.addEventListener('click', () => toggleContent(groupName));
     return button;
@@ -167,6 +170,15 @@ function getCurrentSite() {
     if (window.location.hostname.includes('tiktok.com')) return 'tiktok';
     return null;
 }
+
+function pauseAllVideos() {
+    const videos = document.querySelectorAll('video');
+    videos.forEach(video => {
+        video.pause();
+        video.muted = true;
+    });
+}
+
 
 function hideOrShowContent(groupName) {
     const currentSite = getCurrentSite();
@@ -219,14 +231,18 @@ function hideOrShowContent(groupName) {
         if (sites.tiktok.isAllowedPage()) {
             return;
         }
-        sites.tiktok.selectorGroups.forEach(({name, selector}) => {
-            const elements = document.querySelectorAll(selector);
+        const group = sites.tiktok.selectorGroups.find(g => g.name === groupName);
+        if (group) {
+            const elements = document.querySelectorAll(group.selector);
             elements.forEach(element => {
                 element.style.display = isContentHidden ? 'none' : '';
             });
-        });
-        const button = document.querySelector('.algorithm-escape-toggle-container[data-group="tiktok-feed"] .algorithm-escape-toggle');
-        updateToggleButton(button);
+            if (isContentHidden) {
+                pauseAllVideos();
+            }
+            const button = document.querySelector(`.algorithm-escape-toggle-container[data-group="${groupName}"] .algorithm-escape-toggle`);
+            updateToggleButton(button);
+        }
     }
 }
 
@@ -380,12 +396,13 @@ function initializeSite() {
                         element.style.display = 'none';
                         console.log('Element hidden:', element); // Debug log
                     });
-                    if (!document.querySelector('.algorithm-escape-toggle-container[data-group="tiktok-feed"]')) {
-                        console.log('Creating toggle button for TikTok'); // Debug log
-                        createToggleButton(document.body, 'tiktok-feed', true);
+                    if (!document.querySelector(`.algorithm-escape-toggle-container[data-group="${group.name}"]`)) {
+                        console.log(`Creating toggle button for TikTok ${group.name}`); // Debug log
+                        createToggleButton(document.body, group.name, true);
                     }
                 }
             });
+            pauseAllVideos();
         }
     }
 }
@@ -436,17 +453,21 @@ function periodicShortsCheck() {
 setInterval(periodicShortsCheck, 1000);
 
 function periodicTikTokCheck() {
-    if (getCurrentSite() === 'tiktok' && siteEnabled && isContentHidden) {
+    if (getCurrentSite() === 'tiktok' && siteEnabled) {
         console.log('Periodic TikTok check'); // Debug log
         sites.tiktok.selectorGroups.forEach(group => {
             const elements = document.querySelectorAll(group.selector);
             elements.forEach(element => {
-                element.style.display = 'none';
+                if (isContentHidden) {
+                    element.style.display = 'none';
+                }
             });
         });
+        if (isContentHidden) {
+            pauseAllVideos();
+        }
     }
 }
-
 // Run the periodic check every second
 setInterval(periodicTikTokCheck, 1000);
 
