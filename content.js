@@ -76,16 +76,15 @@ const sites = {
                 selector: '[data-testid="primaryColumn"] [data-testid="cellInnerDiv"]'
             },
             {
-                name: 'explore',
-                selector: '[data-testid="sidebarColumn"] [aria-label="Search and explore"]'
-            },
-            {
-                name: 'who-to-follow',
-                selector: '[data-testid="sidebarColumn"] [aria-label="Who to follow"]'
+                name: 'sidebar-content',
+                selector: '[data-testid="sidebarColumn"] > div > div:not(:first-child)'
             }
         ],
         isNotificationsPage: function() {
             return window.location.pathname.includes('/notifications');
+        },
+        getTweetBox: function() {
+            return document.querySelector('[data-testid="tweetTextarea_0"]');
         }
     },
     tiktok: {
@@ -117,16 +116,13 @@ function createToggleButton(element, groupName, fixed = false) {
     container.className = 'algorithm-escape-toggle-container';
     container.setAttribute('data-group', groupName);
 
-    if (fixed || groupName === 'tiktok-feed') {
-        container.style.position = 'fixed';
-        container.style.top = '60px';
-        container.style.left = '50%';
-        container.style.transform = 'translateX(-50%)';
-        container.style.zIndex = '9999999';
+    if (fixed) {
+        container.style.position = 'sticky';
+        container.style.top = '0';
+        container.style.zIndex = '9999';
         container.style.backgroundColor = 'white';
         container.style.padding = '10px';
-        container.style.borderRadius = '5px';
-        container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+        container.style.textAlign = 'center';
     }
 
     const button = document.createElement('button');
@@ -140,8 +136,14 @@ function createToggleButton(element, groupName, fixed = false) {
     container.appendChild(button);
     container.appendChild(text);
 
-    if (fixed || groupName === 'tiktok-feed') {
-        document.body.appendChild(container);
+    if (fixed) {
+        const tweetBox = sites.twitter.getTweetBox();
+        if (tweetBox) {
+            const tweetBoxContainer = tweetBox.closest('[data-testid="primaryColumn"] > div > div');
+            if (tweetBoxContainer) {
+                tweetBoxContainer.parentNode.insertBefore(container, tweetBoxContainer.nextSibling);
+            }
+        }
     } else {
         element.parentNode.insertBefore(container, element);
     }
@@ -152,7 +154,19 @@ function createToggleButton(element, groupName, fixed = false) {
 
 function toggleContent(groupName) {
     isContentHidden = !isContentHidden;
-    hideOrShowContent(groupName);
+    const currentSite = getCurrentSite();
+    if (currentSite === 'twitter') {
+        sites.twitter.selectors.forEach(({name, selector}) => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                element.style.setProperty('display', isContentHidden ? 'none' : '', 'important');
+            });
+        });
+        const button = document.querySelector('.algorithm-escape-toggle-container[data-group="twitter"] .algorithm-escape-toggle');
+        updateToggleButton(button);
+    } else {
+        hideOrShowContent(groupName);
+    }
 }
 
 function updateToggleButton(button) {
@@ -248,6 +262,36 @@ function hideOrShowContent(groupName) {
             const button = document.querySelector(`.algorithm-escape-toggle-container[data-group="${groupName}"] .algorithm-escape-toggle`);
             updateToggleButton(button);
         }
+    }
+}
+
+function observeTwitterChanges() {
+    console.log('Observing Twitter changes'); // Debug log
+    const twitterObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        sites.twitter.selectors.forEach(({name, selector}) => {
+                            if (node.matches(selector) || node.querySelector(selector)) {
+                                if (isContentHidden) {
+                                    node.style.display = 'none';
+                                    console.log(`Hidden new ${name} content`); // Debug log
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+
+    const twitterBody = document.body;
+    if (twitterBody) {
+        twitterObserver.observe(twitterBody, { childList: true, subtree: true });
+        console.log('Twitter observer attached to body'); // Debug log
+    } else {
+        console.log('Twitter body not found for observer'); // Debug log
     }
 }
 
@@ -363,6 +407,15 @@ function initializeSite() {
             newsfeed.classList.add('hidden-by-extension');
             createToggleButton(newsfeed, 'facebook-feed');
         }
+        // Add an observer for Facebook to handle dynamic content loading
+        const facebookObserver = new MutationObserver(() => {
+            const newsfeed = sites.facebook.getNewsfeed();
+            if (newsfeed && !newsfeed.classList.contains('hidden-by-extension') && !document.querySelector('.algorithm-escape-toggle-container[data-group="facebook-feed"]')) {
+                newsfeed.classList.add('hidden-by-extension');
+                createToggleButton(newsfeed, 'facebook-feed');
+            }
+        });
+        facebookObserver.observe(document.body, { childList: true, subtree: true });
     } else if (currentSite === 'instagram') {
         let contentFound = false;
         sites.instagram.selectors.forEach(selector => {
@@ -396,10 +449,7 @@ function initializeSite() {
             }
         });
         if (contentFound && !document.querySelector('.algorithm-escape-toggle-container[data-group="twitter"]')) {
-            const mainColumn = document.querySelector('[data-testid="primaryColumn"]');
-            if (mainColumn) {
-                createToggleButton(mainColumn, 'twitter', true);
-            }
+            createToggleButton(document.body, 'twitter', true);
         }
     } else if (currentSite === 'tiktok') {
         console.log('Initializing TikTok'); // Debug log
@@ -427,11 +477,27 @@ checkSiteEnabled();
 
 const observer = new MutationObserver(() => {
     if (isContentHidden && siteEnabled) {
+        initializeSite();
         handleYoutubeNavigation();
+
     }
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
+
+// setInterval(() => {
+//     if (isContentHidden && siteEnabled) {
+//         initializeSite();
+//     }
+// }, 1000);
+
+// // const observer = new MutationObserver(() => {
+// //     if (isContentHidden && siteEnabled) {
+// //         handleYoutubeNavigation();
+// //     }
+// // });
+
+// // observer.observe(document.body, { childList: true, subtree: true });
 
 function handleYoutubeNavigation() {
     if (getCurrentSite() === 'youtube') {
@@ -471,8 +537,7 @@ function periodicShortsCheck() {
         }
     }
 }
-// Run the periodic check every second
-setInterval(periodicShortsCheck, 1000);
+
 
 function periodicTikTokCheck() {
     if (getCurrentSite() === 'tiktok' && siteEnabled) {
@@ -490,14 +555,16 @@ function periodicTikTokCheck() {
         }
     }
 }
-// Run the periodic check every second
-setInterval(periodicTikTokCheck, 1000);
 
-// Modify the existing interval to include handleYoutubeNavigation
 setInterval(() => {
     if (isContentHidden && siteEnabled) {
-        initializeSite();
-        handleYoutubeNavigation();
+        if (getCurrentSite() === 'youtube') {
+            initializeSite();
+            handleYoutubeNavigation();
+            periodicShortsCheck();
+        } else if (getCurrentSite() === 'tiktok') {
+            periodicTikTokCheck();
+        }
     }
 }, 1000);
 
