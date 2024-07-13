@@ -1,37 +1,61 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const youtubeToggle = document.getElementById('youtube-toggle');
-  const facebookToggle = document.getElementById('facebook-toggle');
-  const instagramToggle = document.getElementById('instagram-toggle');
-  const twitterToggle = document.getElementById('twitter-toggle');
-  const tiktokToggle = document.getElementById('tiktok-toggle');
+    const toggles = {
+        youtube: document.getElementById('youtube-toggle'),
+        facebook: document.getElementById('facebook-toggle'),
+        instagram: document.getElementById('instagram-toggle'),
+        twitter: document.getElementById('twitter-toggle'),
+        tiktok: document.getElementById('tiktok-toggle')
+    };
 
-  // Load saved settings
-  chrome.storage.sync.get(['youtube', 'facebook', 'instagram', 'twitter', 'tiktok'], function(result) {
-    youtubeToggle.checked = result.youtube !== false;
-    facebookToggle.checked = result.facebook !== false;
-    instagramToggle.checked = result.instagram !== false;
-    twitterToggle.checked = result.twitter !== false;
-    tiktokToggle.checked = result.tiktok !== false;
-  });
+    const reportButton = document.getElementById('report-button');
 
-  // Save settings when toggled
-  youtubeToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({youtube: this.checked});
-  });
+    // Load saved settings
+    chrome.storage.sync.get(['youtube', 'facebook', 'instagram', 'twitter', 'tiktok'], function(result) {
+        for (let site in toggles) {
+            toggles[site].checked = result[site] !== false;
+        }
+    });
 
-  facebookToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({facebook: this.checked});
-  });
+    // Save settings when toggled and add animation
+    for (let site in toggles) {
+        toggles[site].addEventListener('change', function() {
+            chrome.storage.sync.set({[site]: this.checked});
+            
+            // Animation
+            const slider = this.nextElementSibling;
+            slider.style.transition = 'background-color 0.3s, transform 0.3s';
+            
+            if (this.checked) {
+                slider.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    slider.style.transform = 'scale(1)';
+                }, 150);
+            } else {
+                slider.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    slider.style.transform = 'scale(1)';
+                }, 150);
+            }
+        });
+    }
 
-  instagramToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({instagram: this.checked});
-  });
+    // Report Issue button functionality
+    reportButton.addEventListener('click', function() {
+        const emailAddress = 'glitchfix@escapethealgorithm.org';
+        const subject = 'Issue Report: Escape the Algorithm Extension';
+        const body = 'Please describe the issue you encountered:';
+        
+        const mailtoLink = `mailto:${emailAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        chrome.tabs.create({ url: mailtoLink });
+    });
 
-  twitterToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({twitter: this.checked});
-  });
+    // Button hover animation
+    reportButton.addEventListener('mouseover', function() {
+        this.style.transform = 'translateY(-2px) rotate(2deg)';
+    });
 
-  tiktokToggle.addEventListener('change', function() {
-    chrome.storage.sync.set({tiktok: this.checked});
-  });
+    reportButton.addEventListener('mouseout', function() {
+        this.style.transform = 'translateY(0) rotate(0deg)';
+    });
 });
