@@ -15,7 +15,11 @@ const sites = {
             {
               name: 'shorts-feed',
               selector: '#page-manager > ytd-shorts'
-          }
+            },
+            {
+            name: 'sidebar-content',
+            selector: '#related'
+            }
         ],
         channelVideosSelector: '#contents.ytd-rich-grid-renderer',
         additionalActions: function() {
@@ -49,6 +53,49 @@ const sites = {
             return window.location.pathname.includes('/shorts');
         }
     },
+    twitter: {
+        selectors: [
+            {
+                name: 'main-feed',
+                selector: '[data-testid="primaryColumn"] [data-testid="cellInnerDiv"]'
+            },
+            {
+                name: 'sidebar-content',
+                selector: '[data-testid="sidebarColumn"] > div > div:not(:first-child)'
+            }
+        ],
+        tweetBoxSelector: '[data-testid="tweetTextarea_0"]',
+        searchBoxSelector: '[data-testid="SearchBox_Search_Input"]',
+        isAllowedPage: function() {
+            return this.isNotificationsPage() || 
+                   this.isMessagesPage() ||
+                   this.isProfilePage() ||
+                   this.isSingleTweetPage();
+        },
+        isNotificationsPage: function() {
+            return window.location.pathname.includes('/notifications');
+        },
+        isMessagesPage: function() {
+            return window.location.pathname.includes('/messages');
+        },
+        isProfilePage: function() {
+            return /^\/[^\/]+$/.test(window.location.pathname) && 
+                   !window.location.pathname.includes('/home');
+        },
+        isSingleTweetPage: function() {
+            return window.location.pathname.includes('/status/');
+        },
+        isTimelinePage: function() {
+            return window.location.pathname.includes('/i/timeline');
+        },
+        getTweetBox: function() {
+            return document.querySelector(this.tweetBoxSelector);
+        },
+        getTweetBoxContainer: function() {
+            const tweetBox = document.querySelector(this.tweetBoxSelector);
+            return tweetBox ? tweetBox.closest('[data-testid="primaryColumn"] > div > div') : null;
+        }
+    },
     facebook: {
         getNewsfeed: function() {
             const mainContent = document.querySelector('div[role="main"]');
@@ -68,40 +115,6 @@ const sites = {
             'div[role="menu"]',
             'main[role="main"] > div > div'
         ]
-    },
-    twitter: {
-        selectors: [
-            {
-                name: 'main-feed',
-                selector: '[data-testid="primaryColumn"] [data-testid="cellInnerDiv"]'
-            },
-            {
-                name: 'sidebar-content',
-                selector: '[data-testid="sidebarColumn"] > div > div:not(:first-child)'
-            }
-        ],
-        tweetBoxSelector: '[data-testid="tweetTextarea_0"]',
-        isNotificationsPage: function() {
-            return window.location.pathname.includes('/notifications');
-        },
-        isProfilePage: function() {
-            return /^\/[^\/]+$/.test(window.location.pathname) && 
-                   !window.location.pathname.includes('/home') && 
-                   !window.location.pathname.includes('/status/');
-        },
-        isSingleTweetPage: function() {
-            return window.location.pathname.includes('/status/');
-        },
-        isTimelinePage: function() {
-            return window.location.pathname.includes('/i/timeline');
-        },
-        getTweetBox: function() {
-            return document.querySelector('[data-testid="tweetTextarea_0"]');
-        },
-        getTweetBoxContainer: function() {
-            const tweetBox = document.querySelector(this.tweetBoxSelector);
-            return tweetBox ? tweetBox.closest('[data-testid="primaryColumn"] > div > div') : null;
-        }
     },
     tiktok: {
         selectorGroups: [
@@ -152,6 +165,7 @@ function initializeSite() {
     
     const currentSite = getCurrentSite();
     if (currentSite === 'youtube') {
+
         if (sites.youtube.isShortsPage()) {
             hideYoutubeShorts();
         } else if (!sites.youtube.isAllowedPage()) {
@@ -174,6 +188,14 @@ function initializeSite() {
         const shortsShelf = document.querySelector('ytd-reel-shelf-renderer');
         if (shortsShelf) {
             shortsShelf.style.display = isContentHidden ? 'none' : '';
+        }
+
+        const sidebarContent = document.querySelector('#related');
+        if (sidebarContent) {
+            sidebarContent.style.display = isContentHidden ? 'none' : '';
+            if (!document.querySelector('.algorithm-escape-toggle-container[data-group="sidebar-content"]')) {
+                createToggleButton(sidebarContent, 'sidebar-content');
+            }
         }
     } else if (currentSite === 'facebook') {
         const newsfeed = sites.facebook.getNewsfeed();
@@ -291,8 +313,14 @@ function showAllContent() {
             const elements = document.querySelectorAll(group.selector);
             elements.forEach(element => {
                 element.classList.remove('hidden-by-extension');
+                element.style.display = '';
             });
         });
+        const sidebarContent = document.querySelector('#related');
+        if (sidebarContent) {
+            sidebarContent.classList.remove('hidden-by-extension');
+            sidebarContent.style.display = '';
+        }
     } else if (currentSite === 'facebook') {
         const newsfeed = sites.facebook.getNewsfeed();
         if (newsfeed) {
@@ -337,32 +365,63 @@ function createToggleButton(element, groupName, fixed = false) {
     container.className = 'algorithm-escape-toggle-container';
     container.setAttribute('data-group', groupName);
 
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const bgColor = isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const textColor = isDarkMode ? '#e94560' : '#e94560';
+    const buttonTextColor = isDarkMode ? '#e94560' : '#e94560';
+
     if (fixed) {
-        container.style.position = 'fixed';
-        container.style.top = '60px';
-        container.style.left = '50%';
-        container.style.transform = 'translateX(-50%)';
-        container.style.zIndex = '9999999';
-        container.style.backgroundColor = 'white';
-        container.style.padding = '10px';
-        container.style.borderRadius = '5px';
-        container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+        Object.assign(container.style, {
+            position: 'fixed',
+            top: '60px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            opacity: '0',
+            zIndex: '9999999',
+            backgroundColor: bgColor,
+            padding: '15px',
+            borderRadius: '10px',
+            boxShadow: '0 4px 20px rgba(233, 69, 96, 0.2)',
+            transition: 'opacity 0.5s ease-out',
+            overflow: 'hidden'
+        });
     } else {
-        container.style.position = 'sticky';
-        container.style.top = '0';
-        container.style.zIndex = '9999';
-        container.style.backgroundColor = 'white';
-        container.style.padding = '10px';
-        container.style.textAlign = 'center';
+        Object.assign(container.style, {
+            position: 'sticky',
+            top: '0',
+            zIndex: '9999',
+            backgroundColor: bgColor,
+            padding: '15px',
+            textAlign: 'center',
+            opacity: '0',
+            transition: 'opacity 0.5s ease-out',
+            overflow: 'hidden'
+        });
     }
 
     const button = document.createElement('button');
     button.className = 'algorithm-escape-toggle';
     button.textContent = 'Show Hidden Content';
+    Object.assign(button.style, {
+        backgroundColor: 'transparent',
+        color: buttonTextColor,
+        border: '2px solid #e94560',
+        padding: '10px 15px',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        transition: 'transform 0.3s ease'
+    });
 
     const text = document.createElement('p');
     text.className = 'algorithm-escape-text';
     text.textContent = 'You are escaping the algorithm 😎';
+    Object.assign(text.style, {
+        color: textColor,
+        margin: '10px 0 0',
+        fontSize: '12px'
+    });
 
     container.appendChild(button);
     container.appendChild(text);
@@ -386,8 +445,54 @@ function createToggleButton(element, groupName, fixed = false) {
     }
 
     button.addEventListener('click', () => toggleContent(groupName));
+
+    // Trigger animation after a short delay
+    setTimeout(() => {
+        container.style.opacity = '1';
+        addSparkle(container);
+    }, 100);
+
+    // Add subtle scale effect to the button
+    button.addEventListener('mouseover', () => {
+        button.style.transform = 'scale(1.05)';
+    });
+
+    button.addEventListener('mouseout', () => {
+        button.style.transform = 'scale(1)';
+    });
+
     return button;
 }
+
+function addSparkle(container) {
+    const sparkleCount = 5;
+    for (let i = 0; i < sparkleCount; i++) {
+        const sparkle = document.createElement('div');
+        Object.assign(sparkle.style, {
+            position: 'absolute',
+            width: '2px',
+            height: '2px',
+            borderRadius: '50%',
+            backgroundColor: '#e94560',
+            top: Math.random() * 100 + '%',
+            left: Math.random() * 100 + '%',
+            opacity: 0,
+            animation: `sparkle 0.8s ease-in-out ${Math.random() * 0.5}s`
+        });
+        container.appendChild(sparkle);
+    }
+}
+
+// Add this at the beginning of your script or in a separate <style> tag in your HTML
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes sparkle {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
 
 function toggleContent(groupName) {
     isContentHidden = !isContentHidden;
@@ -422,12 +527,24 @@ function hideOrShowContent(groupName) {
         }
         if (groupName === 'shorts-feed') {
             hideYoutubeShorts();
+        } else if (groupName === 'sidebar-content') {
+            const sidebarContent = document.querySelector('#related');
+            if (sidebarContent) {
+                if (isContentHidden) {
+                    sidebarContent.classList.add('hidden-by-extension');
+                    sidebarContent.style.display = 'none';
+                } else {
+                    sidebarContent.classList.remove('hidden-by-extension');
+                    sidebarContent.style.display = '';
+                }
+            }
         } else {
             const group = sites.youtube.selectorGroups.find(g => g.name === groupName);
             if (group) {
                 const elements = document.querySelectorAll(group.selector);
                 elements.forEach(element => {
                     element.classList.toggle('hidden-by-extension', isContentHidden);
+                    element.style.display = isContentHidden ? 'none' : '';
                 });
             }
         }
