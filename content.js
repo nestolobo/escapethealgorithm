@@ -494,20 +494,26 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-function toggleContent(groupName) {
-    isContentHidden = !isContentHidden;
+async function toggleContent(groupName) {
+    if (!isContentHidden) {
+        // If content is already shown, hide it without confirmation
+        isContentHidden = true;
+        hideOrShowContent(groupName);
+    } else {
+        // If content is hidden, show confirmation modal
+        const shouldShow = await createModal();
+        if (shouldShow) {
+            isContentHidden = false;
+            hideOrShowContent(groupName);
+        }
+    }
     const currentSite = getCurrentSite();
     if (currentSite === 'twitter') {
-        sites.twitter.selectors.forEach(({name, selector}) => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                element.style.setProperty('display', isContentHidden ? 'none' : '', 'important');
-            });
-        });
         const button = document.querySelector('.algorithm-escape-toggle-container[data-group="twitter"] .algorithm-escape-toggle');
         updateToggleButton(button);
     } else {
-        hideOrShowContent(groupName);
+        const button = document.querySelector(`.algorithm-escape-toggle-container[data-group="${groupName}"] .algorithm-escape-toggle`);
+        updateToggleButton(button);
     }
 }
 
@@ -517,6 +523,83 @@ function updateToggleButton(button) {
         button.textContent = isContentHidden ? 'Show Hidden Content' : 'Hide Content';
         text.textContent = isContentHidden ? 'You are escaping the algorithm 😎' : 'Don\'t get sucked in 😱';
     }
+}
+
+function createModal() {
+    const modal = document.createElement('div');
+    modal.className = 'algorithm-escape-modal';
+
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const bgColor = isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const textColor = isDarkMode ? '#e0e0e0' : '#333333';
+    const buttonTextColor = '#e94560';
+
+    modal.innerHTML = `
+        <div class="algorithm-escape-modal-content">
+            <h2>Are you sure you actually want to show this content?</h2>
+            <button id="confirmShow" class="algorithm-escape-modal-button">Yes, I'm sure</button>
+            <button id="cancelShow" class="algorithm-escape-modal-button">Honestly, no</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalStyle = document.createElement('style');
+    modalStyle.textContent = `
+        .algorithm-escape-modal {
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .algorithm-escape-modal-content {
+            background-color: ${bgColor};
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2);
+        }
+        .algorithm-escape-modal-content h2 {
+            color: ${textColor};
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .algorithm-escape-modal-button {
+            background-color: transparent;
+            color: ${buttonTextColor};
+            border: 2px solid ${buttonTextColor};
+            padding: 10px 15px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .algorithm-escape-modal-button:hover {
+            background-color: ${buttonTextColor};
+            color: ${bgColor};
+        }
+    `;
+    document.head.appendChild(modalStyle);
+
+    return new Promise((resolve) => {
+        document.getElementById('confirmShow').addEventListener('click', () => {
+            modal.remove();
+            modalStyle.remove();
+            resolve(true);
+        });
+        document.getElementById('cancelShow').addEventListener('click', () => {
+            modal.remove();
+            modalStyle.remove();
+            resolve(false);
+        });
+    });
 }
 
 function hideOrShowContent(groupName) {
@@ -754,6 +837,14 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
             }
         }
     }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'pageChanged') {
+        // Handle the page change action
+        sendResponse({received: true});
+    }
+    return true; // Indicates that the response will be sent asynchronously
 });
 
 checkSiteEnabled();
