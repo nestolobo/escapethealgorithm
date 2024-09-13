@@ -428,8 +428,8 @@ function createToggleButton(element, groupName, fixed = false) {
     closeButton.className = 'algorithm-escape-close';
     Object.assign(closeButton.style, {
         position: 'absolute',
-        top: '5px',
-        right: '5px',
+        top: '1px',
+        right: '1px',
         width: '20px',
         height: '20px',
         borderRadius: '50%',
@@ -447,8 +447,6 @@ function createToggleButton(element, groupName, fixed = false) {
     closeButton.addEventListener('click', (e) => {
         e.stopPropagation();
         container.style.display = 'none';
-        // Store the state in local storage
-        localStorage.setItem(`hideButton_${groupName}`, 'true');
     });
 
     container.appendChild(closeButton);
@@ -474,11 +472,6 @@ function createToggleButton(element, groupName, fixed = false) {
     }
 
     button.addEventListener('click', () => toggleContent(groupName));
-
-    // Check if the button should be hidden
-    if (localStorage.getItem(`hideButton_${groupName}`) === 'true') {
-        container.style.display = 'none';
-    }
 
     // Trigger animation after a short delay
     setTimeout(() => {

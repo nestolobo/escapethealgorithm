@@ -35,3 +35,7 @@
   color: #666;
   margin-top: 8px;
 }
+
+.algorithm-escape-close:hover {
+  color: red;
+}
