@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.25] - 2023-09-13
+### Added
+- X button to remove the show/hide button from the page temporarily in case it is in the way of basic site functionality
+
 ## [1.0.24] - 2023-07-27
 ### Added
 - New feature to block TikTok feeds

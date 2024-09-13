@@ -37,5 +37,5 @@
 }
 
 .algorithm-escape-close:hover {
-  color: red;
+  background-color: rgba(255, 0, 0, 0.7) !important; /* Red with some transparency */
 }
