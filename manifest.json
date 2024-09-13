@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Escape the Algorithm - YouTube Feed Blocker",
-  "version": "1.0.21",
-  "description": "Hide your algorithmically generated feeds on YouTube, Twitter, Facebook, and more to unhook your brain from social media addiction",
+  "name": "Escape the Algorithm - Social Media Feed Blocker",
+  "short_name": "Feed Blocker",
+  "version": "1.0.24",
+  "description": "Hide distracting feeds and suggested content on YouTube, Twitter, Facebook and more to unhook your brain from social media addiction",
+  "author": "Ernest Wolfe",
+  "homepage_url": "https://www.escapethealgorithm.org",
   "permissions": ["storage", "notifications"],
   "host_permissions": [
     "*://*.youtube.com/*",

@@ -36,4 +36,9 @@ chrome.runtime.onInstalled.addListener((details) => {
       }
     });
   }
+    if (details.reason === "update") {
+    const currentVersion = chrome.runtime.getManifest().version;
+    const updateUrl = `https://escapethealgorithm.org/changelog.html`;
+    chrome.tabs.create({ url: updateUrl });
+  }
 });

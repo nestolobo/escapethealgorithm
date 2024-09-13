@@ -367,8 +367,8 @@ function createToggleButton(element, groupName, fixed = false) {
 
     const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const bgColor = isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(255, 255, 255, 0.9)';
-    const textColor = isDarkMode ? '#e94560' : '#e94560';
-    const buttonTextColor = isDarkMode ? '#e94560' : '#e94560';
+    const textColor = isDarkMode ? '#e0e0e0' : '#333333';
+    const buttonTextColor = '#e94560';
 
     if (fixed) {
         Object.assign(container.style, {
@@ -423,6 +423,35 @@ function createToggleButton(element, groupName, fixed = false) {
         fontSize: '12px'
     });
 
+    // Create close button
+    const closeButton = document.createElement('div');
+    closeButton.className = 'algorithm-escape-close';
+    Object.assign(closeButton.style, {
+        position: 'absolute',
+        top: '5px',
+        right: '5px',
+        width: '20px',
+        height: '20px',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(128, 128, 128, 0.5)',
+        cursor: 'pointer',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        fontSize: '14px',
+        color: 'white',
+        fontWeight: 'bold'
+    });
+    closeButton.textContent = '×';
+
+    closeButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        container.style.display = 'none';
+        // Store the state in local storage
+        localStorage.setItem(`hideButton_${groupName}`, 'true');
+    });
+
+    container.appendChild(closeButton);
     container.appendChild(button);
     container.appendChild(text);
 
@@ -445,6 +474,11 @@ function createToggleButton(element, groupName, fixed = false) {
     }
 
     button.addEventListener('click', () => toggleContent(groupName));
+
+    // Check if the button should be hidden
+    if (localStorage.getItem(`hideButton_${groupName}`) === 'true') {
+        container.style.display = 'none';
+    }
 
     // Trigger animation after a short delay
     setTimeout(() => {
@@ -563,11 +597,14 @@ function createModal() {
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
         }
         .algorithm-escape-modal-content h2 {
             color: ${textColor};
             font-size: 18px;
             margin-bottom: 20px;
+            font-weight: bold;
+            font-family: inherit !important;
         }
         .algorithm-escape-modal-button {
             background-color: transparent;
@@ -580,6 +617,7 @@ function createModal() {
             font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
+            font-family: inherit !important;
         }
         .algorithm-escape-modal-button:hover {
             background-color: ${buttonTextColor};
