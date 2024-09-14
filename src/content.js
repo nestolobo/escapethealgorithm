@@ -510,17 +510,6 @@ function addSparkle(container) {
     }
 }
 
-// Add this at the beginning of your script or in a separate <style> tag in your HTML
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes sparkle {
-        0% { transform: scale(0); opacity: 0; }
-        50% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(0); opacity: 0; }
-    }
-`;
-document.head.appendChild(style);
-
 async function toggleContent(groupName) {
     if (!isContentHidden) {
         // If content is already shown, hide it without confirmation

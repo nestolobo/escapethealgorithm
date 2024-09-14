@@ -1,5 +1,4 @@
 {
-  "manifest_version": 3,
   "name": "Escape the Algorithm - Social Media Feed Blocker",
   "short_name": "Feed Blocker",
   "version": "1.0.25",
@@ -14,7 +13,6 @@
     "*://*.twitter.com/*",
     "*://*.x.com/*",
     "*://*.tiktok.com/*"
-
   ],
   "action": {
     "default_popup": "popup.html",
@@ -31,13 +29,9 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.twitter.com/*", "*://*.x.com/*", "*://*.tiktok.com/*"
-],
+      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.twitter.com/*", "*://*.x.com/*", "*://*.tiktok.com/*"],
       "css": ["styles.css"],
       "js": ["content.js"]
     }
-  ],
-  "background": {
-    "service_worker": "background.js"
-  }
+  ]
 }
