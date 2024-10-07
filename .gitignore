@@ -88,3 +88,29 @@ dist
 # Firefox Extension specific
 *.xpi
 *.zip
+
+# Ignore web-ext build artifacts
+web-ext-artifacts/
+
+# Ignore zip files (in case you're creating them manually)
+*.zip
+
+# Ignore any other build directories you might have
+build/
+dist/
+
+# Ignore node_modules if you're using npm
+node_modules/
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore editor specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore any local environment files
+.env

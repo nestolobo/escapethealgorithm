@@ -1,5 +1,11 @@
+import browser from 'webextension-polyfill';
+
 let isContentHidden = true;
 let siteEnabled = true;
+
+function showBody() {
+    document.body.style.display = '';
+}
 
 const sites = {
     youtube: {
@@ -70,8 +76,9 @@ const sites = {
             return this.isNotificationsPage() || 
                    this.isMessagesPage() ||
                    this.isProfilePage() ||
-                   this.isSingleTweetPage();
-        },
+                   this.isSingleTweetPage() ||
+                   this.isTimelinePage();
+               },
         isNotificationsPage: function() {
             return window.location.pathname.includes('/notifications');
         },
@@ -149,14 +156,23 @@ function getCurrentSite() {
 function checkSiteEnabled() {
     const currentSite = getCurrentSite();
     if (currentSite) {
-        chrome.storage.sync.get(currentSite, function(result) {
+        const storage = chrome.storage || browser.storage;
+        storage.sync.get(currentSite).then(result => {
             siteEnabled = result[currentSite] !== false;
+            showBody(); // Always show the body
             if (!siteEnabled) {
                 showAllContent();
             } else {
                 initializeSite();
             }
+        }).catch(error => {
+            console.error('Error accessing storage:', error);
+            showBody(); // Always show the body
+            siteEnabled = true;
+            initializeSite();
         });
+    } else {
+        showBody(); // Always show the body for unrecognized sites
     }
 }
 
@@ -236,12 +252,12 @@ function initializeSite() {
     } else if (currentSite === 'twitter') {
         console.log('Initializing Twitter');
         debugTwitterPageType();
-
-        if (sites.twitter.isNotificationsPage() || sites.twitter.isSingleTweetPage() || sites.twitter.isProfilePage()) {
-            console.log('On a special Twitter page, not hiding content');
+        
+        if (sites.twitter.isAllowedPage()) {
+            console.log('On an allowed Twitter page, not hiding content');
             return;
         }
-
+        
         let contentFound = false;
         sites.twitter.selectors.forEach(({name, selector}) => {
             const elements = document.querySelectorAll(selector);
@@ -334,13 +350,10 @@ function showAllContent() {
             });
         });
     } else if (currentSite === 'twitter') {
-        if (sites.twitter.isNotificationsPage()) {
-            return;
-        }
         sites.twitter.selectors.forEach(({selector}) => {
             const elements = document.querySelectorAll(selector);
             elements.forEach(element => {
-                element.classList.remove('hidden-by-extension');
+                element.style.display = '';
             });
         });
     } else if (currentSite === 'tiktok') {
@@ -673,7 +686,7 @@ function hideOrShowContent(groupName) {
         });
         const button = document.querySelector('.algorithm-escape-toggle-container[data-group="instagram"] .algorithm-escape-toggle');
         updateToggleButton(button);
-    } else     if (currentSite === 'twitter') {
+    } else if (currentSite === 'twitter') {
         console.log('Hiding/Showing Twitter content');
         debugTwitterPageType();
 
@@ -845,8 +858,11 @@ setInterval(() => {
     }
 }, 1000);
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
-    console.log("changing site " + namespace + " with changes: " + changes);
+const storage = chrome.storage || browser.storage;
+
+
+storage.onChanged.addListener(function(changes, namespace) {
+    console.log("changing site " + namespace + " with changes:", changes);
     for (let key in changes) {
         if (key === getCurrentSite()) {
             siteEnabled = changes[key].newValue !== false;
@@ -859,7 +875,9 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
     }
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+const runtime = chrome.runtime || browser.runtime;
+
+runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'pageChanged') {
         // Handle the page change action
         sendResponse({received: true});

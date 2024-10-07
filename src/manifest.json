@@ -1,27 +1,10 @@
 {
-  "name": "Escape the Algorithm - Social Media Feed Blocker",
+  "name": "Escape the Algorithm - Social Feed Blocker",
   "short_name": "Feed Blocker",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "Hide distracting feeds and suggested content on YouTube, Twitter, Facebook and more to unhook your brain from social media addiction",
   "author": "Ernest Wolfe",
   "homepage_url": "https://www.escapethealgorithm.org",
-  "permissions": ["storage", "notifications"],
-  "host_permissions": [
-    "*://*.youtube.com/*",
-    "*://*.facebook.com/*",
-    "*://*.instagram.com/*",
-    "*://*.twitter.com/*",
-    "*://*.x.com/*",
-    "*://*.tiktok.com/*"
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "/icons/icon16.png",
-      "48": "/icons/icon48.png",
-      "128": "/icons/icon128.png"
-    }
-  },
   "icons": {
     "16": "/icons/icon16.png",
     "48": "/icons/icon48.png",
@@ -29,7 +12,14 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.youtube.com/*", "*://*.facebook.com/*", "*://*.instagram.com/*", "*://*.twitter.com/*", "*://*.x.com/*", "*://*.tiktok.com/*"],
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.facebook.com/*",
+        "*://*.instagram.com/*",
+        "*://*.twitter.com/*",
+        "*://*.x.com/*",
+        "*://*.tiktok.com/*"
+      ],
       "css": ["styles.css"],
       "js": ["content.js"]
     }

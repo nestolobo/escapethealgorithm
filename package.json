@@ -5,6 +5,7 @@
     "build": "npm run build:chrome && npm run build:firefox"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {

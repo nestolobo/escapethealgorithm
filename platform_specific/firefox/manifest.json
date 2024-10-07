@@ -1,12 +1,30 @@
 {
   "manifest_version": 2,
+  "permissions": [
+    "storage",
+    "notifications",
+    "*://*.youtube.com/*",
+    "*://*.facebook.com/*",
+    "*://*.instagram.com/*",
+    "*://*.twitter.com/*",
+    "*://*.x.com/*",
+    "*://*.tiktok.com/*"
+  ],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/icons/icon16.png",
+      "48": "/icons/icon48.png",
+      "128": "/icons/icon128.png"
+    }
+  },
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["browser-polyfill.js", "background.js"],
     "persistent": false
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "your-extension@example.com"
+      "id": "ernest@escapethealgorithm.org"
     }
   }
 }
