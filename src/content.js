@@ -1,3 +1,24 @@
+/**
+ * Content Script for "Escape the Algorithm"
+ *
+ * This script is injected into supported social media websites and works to hide distracting feeds
+ * and content by targeting site-specific DOM elements. It uses a configuration object ("sites") that
+ * defines selectors and actions for each supported site (e.g., YouTube, Twitter, Facebook, etc.).
+ *
+ * The script performs the following key tasks:
+ *   - Determines the current site based on the URL.
+ *   - Retrieves user settings from storage to determine if content blocking is enabled.
+ *   - Hides or shows content by applying CSS classes or inline styles to feed elements.
+ *   - Injects toggle buttons into the page to allow users to show/hide hidden content.
+ *   - Monitors page mutations (for dynamic content) and periodically checks for new elements.
+ *   - Handles special cases (e.g., YouTube Shorts, Twitter tweet composition areas) and performs additional actions
+ *     such as pausing videos or disabling autoplay.
+ *
+ * This approach allows users to customize their browsing experience by reducing exposure to algorithmically driven content.
+ *
+ * Licensed under MIT. See LICENSE for details.
+ */
+
 import browser from "webextension-polyfill";
 
 let isContentHidden = true;
