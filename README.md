@@ -45,7 +45,7 @@ npm run build:chrome
 npm run build:firefox
 ```
 
-# See CONTRIBUTING.md for detailed development instructions.
+### See CONTRIBUTING.md for detailed development instructions.
 
 ## Why This Exists
 
