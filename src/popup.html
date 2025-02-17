@@ -1,160 +1,104 @@
 <!DOCTYPE html>
-<html>
+<!--
+  Escape the Algorithm - Popup Settings
+  This file provides the user interface for enabling/disabling content blocking on various social media platforms.
+  Most functionality is explained inline. See popup.js for additional behavior.
+  Licensed under MIT. See LICENSE for details.
+-->
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Escape the Algorithm Settings</title>
-    <style>
-      body {
-        width: 250px;
-        padding: 20px;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #1a1a2e;
-        color: #e94560;
-      }
-      h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        font-weight: 300;
-        letter-spacing: 2px;
-      }
-      .site-toggle {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        padding: 5px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-      }
-
-      .site-toggle:hover {
-        background-color: rgba(233, 69, 96, 0.1);
-      }
-
-      .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
-        transition: transform 0.3s ease;
-      }
-
-      .toggle-switch:hover {
-        transform: scale(1.05);
-      }
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #16213e;
-        transition: 0.4s, box-shadow 0.3s ease;
-        border-radius: 34px;
-      }
-
-      .toggle-switch:hover .slider {
-        box-shadow: 0 0 8px rgba(233, 69, 96, 0.5);
-      }
-
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 3px;
-        bottom: 3px;
-        background-color: #0f3460;
-        transition: 0.4s;
-        border-radius: 50%;
-      }
-
-      input:checked + .slider {
-        background-color: #e94560;
-      }
-      input:checked + .slider:before {
-        transform: translateX(26px);
-        background-color: #1a1a2e;
-      }
-      .site-name {
-        font-size: 14px;
-        letter-spacing: 1px;
-      }
-      .report-button {
-        display: block;
-        width: 100%;
-        padding: 10px;
-        margin-top: 20px;
-        background-color: #0f3460;
-        color: #e94560;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        letter-spacing: 1px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-      .report-button:hover {
-        background-color: #e94560;
-        color: #1a1a2e;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(233, 69, 96, 0.2);
-      }
-
-      input:checked + .slider {
-        background-color: #e94560;
-      }
-
-      .toggle-switch:hover input:checked + .slider {
-        box-shadow: 0 0 8px rgba(233, 69, 96, 0.8);
-      }
-    </style>
+    <!-- External CSS for styling -->
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
+    <!-- Header for the popup -->
     <h2>ESCAPE THE ALGORITHM</h2>
-    <div style="margin-top: 20px; font-size: 12px; color: #888">
+
+    <!-- User tip for quick access -->
+    <div class="tip">
       <p>📌 Tip: Pin this extension to your toolbar for easy access 🧩</p>
     </div>
+
+    <!-- Toggle for YouTube content blocking -->
     <div class="site-toggle">
       <span class="site-name">YouTube</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="youtube-toggle" checked />
+        <!-- The checkbox state controls YouTube blocking -->
+        <input
+          type="checkbox"
+          id="youtube-toggle"
+          checked
+          aria-label="Toggle YouTube"
+        />
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Toggle for Facebook content blocking -->
     <div class="site-toggle">
       <span class="site-name">Facebook</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="facebook-toggle" checked />
+        <input
+          type="checkbox"
+          id="facebook-toggle"
+          checked
+          aria-label="Toggle Facebook"
+        />
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Toggle for Instagram content blocking -->
     <div class="site-toggle">
       <span class="site-name">Instagram</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="instagram-toggle" checked />
+        <input
+          type="checkbox"
+          id="instagram-toggle"
+          checked
+          aria-label="Toggle Instagram"
+        />
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Toggle for Twitter/X content blocking -->
     <div class="site-toggle">
       <span class="site-name">Twitter/X</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="twitter-toggle" checked />
+        <input
+          type="checkbox"
+          id="twitter-toggle"
+          checked
+          aria-label="Toggle Twitter"
+        />
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Toggle for TikTok content blocking -->
     <div class="site-toggle">
       <span class="site-name">TikTok</span>
       <label class="toggle-switch">
-        <input type="checkbox" id="tiktok-toggle" checked />
+        <input
+          type="checkbox"
+          id="tiktok-toggle"
+          checked
+          aria-label="Toggle TikTok"
+        />
         <span class="slider"></span>
       </label>
     </div>
+
+    <!-- Button to report an issue -->
     <button id="report-button" class="report-button">
       &#x1F9D0; Report an Issue &#x1F527;
     </button>
+
+    <!-- External JavaScript for dynamic behavior -->
     <script src="popup.js"></script>
   </body>
 </html>
