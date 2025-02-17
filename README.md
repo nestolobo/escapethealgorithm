@@ -31,23 +31,20 @@ A FREE and OPEN-SOURCE browser extension to break free from social media addicti
 
 ## Quick Start
 
-### Clone the repository
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development instructions.
 
+```bash
+### Clone the repository
 git clone https://github.com/username/escapethealgorithm.git
 
 ### Install dependencies
-
 npm install
 
 ### Build for Chrome
-
 npm run build:chrome
 
 ### Build for Firefox
-
 npm run build:firefox
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development instructions.
 
 ## Why This Exists
 
@@ -64,3 +61,4 @@ MIT License – see [LICENSE](LICENSE) for details.
 ## Contact
 
 Questions? Ideas? Email [ernest@escapethealgorithm.org](mailto:ernest@escapethealgorithm.org)
+```
