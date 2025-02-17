@@ -39,15 +39,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development instructions.
 
 ### Install dependencies
 
-`bash npm install `
+`bash npm install`
 
 ### Build for Chrome
 
-npm run build:chrome
+`npm run build:chrome`
 
 ### Build for Firefox
 
-npm run build:firefox
+`npm run build:firefox`
 
 ## Why This Exists
 

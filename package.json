@@ -1,4 +1,14 @@
 {
+  "name": "escape-the-algorithm",
+  "version": "1.0.27",
+  "description": "Browser extension to hide distracting feeds and suggested content on social media platforms",
+  "author": "Ernest Wolfe",
+  "license": "MIT",
+  "homepage": "https://www.escapethealgorithm.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/escapethealgorithm"
+  },
   "scripts": {
     "build:chrome": "webpack --env browser=chrome && node mergeManifests.js chrome",
     "build:firefox": "webpack --env browser=firefox && node mergeManifests.js firefox",
