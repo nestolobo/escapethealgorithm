@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
   Escape the Algorithm - Popup Settings
-  This file provides the user interface for enabling/disabling content blocking on various social media platforms.
-  Most functionality is explained inline. See popup.js for additional behavior.
+  This file provides the UI for enabling/disabling content blocking on various social media platforms.
+  Inline comments explain the functionality.
   Licensed under MIT. See LICENSE for details.
 -->
 <html lang="en">
@@ -10,11 +10,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Escape the Algorithm Settings</title>
-    <!-- External CSS for styling -->
+    <!-- Link to external CSS -->
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <!-- Header for the popup -->
+    <!-- Popup header -->
     <h2>ESCAPE THE ALGORITHM</h2>
 
     <!-- User tip for quick access -->
@@ -22,22 +22,24 @@
       <p>📌 Tip: Pin this extension to your toolbar for easy access 🧩</p>
     </div>
 
-    <!-- Toggle for YouTube content blocking -->
+    <!-- Toggle for YouTube -->
     <div class="site-toggle">
       <span class="site-name">YouTube</span>
       <label class="toggle-switch">
-        <!-- The checkbox state controls YouTube blocking -->
+        <!-- ARIA attributes added for accessibility; role "switch" is used and aria-checked set based on state -->
         <input
           type="checkbox"
           id="youtube-toggle"
           checked
           aria-label="Toggle YouTube"
+          role="switch"
+          aria-checked="true"
         />
         <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Toggle for Facebook content blocking -->
+    <!-- Toggle for Facebook -->
     <div class="site-toggle">
       <span class="site-name">Facebook</span>
       <label class="toggle-switch">
@@ -46,12 +48,14 @@
           id="facebook-toggle"
           checked
           aria-label="Toggle Facebook"
+          role="switch"
+          aria-checked="true"
         />
         <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Toggle for Instagram content blocking -->
+    <!-- Toggle for Instagram -->
     <div class="site-toggle">
       <span class="site-name">Instagram</span>
       <label class="toggle-switch">
@@ -60,12 +64,14 @@
           id="instagram-toggle"
           checked
           aria-label="Toggle Instagram"
+          role="switch"
+          aria-checked="true"
         />
         <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Toggle for Twitter/X content blocking -->
+    <!-- Toggle for Twitter/X -->
     <div class="site-toggle">
       <span class="site-name">Twitter/X</span>
       <label class="toggle-switch">
@@ -74,12 +80,14 @@
           id="twitter-toggle"
           checked
           aria-label="Toggle Twitter"
+          role="switch"
+          aria-checked="true"
         />
         <span class="slider"></span>
       </label>
     </div>
 
-    <!-- Toggle for TikTok content blocking -->
+    <!-- Toggle for TikTok -->
     <div class="site-toggle">
       <span class="site-name">TikTok</span>
       <label class="toggle-switch">
@@ -88,6 +96,8 @@
           id="tiktok-toggle"
           checked
           aria-label="Toggle TikTok"
+          role="switch"
+          aria-checked="true"
         />
         <span class="slider"></span>
       </label>
@@ -98,7 +108,7 @@
       &#x1F9D0; Report an Issue &#x1F527;
     </button>
 
-    <!-- External JavaScript for dynamic behavior -->
+    <!-- Link to external JavaScript for behavior -->
     <script src="popup.js"></script>
   </body>
 </html>

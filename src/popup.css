@@ -1,8 +1,9 @@
-/* Base Styles for the popup */
+/* Base styles for the popup */
 body {
-  width: 250px;
+  width: 100%;
+  max-width: 300px;
   padding: 20px;
-  margin: 0;
+  margin: 0 auto;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #1a1a2e;
   color: #e94560;
@@ -15,7 +16,7 @@ h2 {
   letter-spacing: 2px;
 }
 
-/* Style for the tip text */
+/* Tip text styling */
 .tip {
   margin-top: 20px;
   font-size: 12px;
@@ -23,7 +24,7 @@ h2 {
   text-align: center;
 }
 
-/* Container for each site's toggle switch */
+/* Styling for each site's toggle container */
 .site-toggle {
   display: flex;
   justify-content: space-between;
@@ -38,13 +39,12 @@ h2 {
   background-color: rgba(233, 69, 96, 0.1);
 }
 
-/* Styling for the site name labels */
 .site-name {
   font-size: 14px;
   letter-spacing: 1px;
 }
 
-/* Container for the toggle switch */
+/* Toggle switch container */
 .toggle-switch {
   position: relative;
   display: inline-block;
@@ -57,7 +57,7 @@ h2 {
   transform: scale(1.05);
 }
 
-/* The slider that moves when the toggle is changed */
+/* Slider styling for the toggle */
 .slider {
   position: absolute;
   cursor: pointer;
@@ -74,7 +74,7 @@ h2 {
   box-shadow: 0 0 8px rgba(233, 69, 96, 0.5);
 }
 
-/* The knob inside the slider */
+/* Slider knob styling */
 .slider:before {
   position: absolute;
   content: "";
@@ -87,7 +87,7 @@ h2 {
   border-radius: 50%;
 }
 
-/* Style changes when the toggle is checked */
+/* Styles when the toggle is checked */
 input:checked + .slider {
   background-color: #e94560;
 }
@@ -97,7 +97,6 @@ input:checked + .slider:before {
   background-color: #1a1a2e;
 }
 
-/* Enhanced hover effect when the toggle is active */
 .toggle-switch:hover input:checked + .slider {
   box-shadow: 0 0 8px rgba(233, 69, 96, 0.8);
 }
@@ -123,4 +122,21 @@ input:checked + .slider:before {
   color: #1a1a2e;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(233, 69, 96, 0.2);
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 320px) {
+  body {
+    padding: 10px;
+  }
+  h2 {
+    font-size: 18px;
+  }
+  .site-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .toggle-switch {
+    margin-top: 5px;
+  }
 }
