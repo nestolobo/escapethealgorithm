@@ -1,6 +1,6 @@
-/* Base styles for the popup */
+/* Base styles for the popup (default dark theme) */
 body {
-  width: 100%;
+  width: 250px;
   max-width: 300px;
   padding: 20px;
   margin: 0 auto;
@@ -124,8 +124,7 @@ input:checked + .slider:before {
   box-shadow: 0 4px 8px rgba(233, 69, 96, 0.2);
 }
 
-/* Responsive adjustments for small screens */
-@media (max-width: 320px) {
+Responsive adjustments for small screens @media (max-width: 320px) {
   body {
     padding: 10px;
   }
@@ -139,4 +138,36 @@ input:checked + .slider:before {
   .toggle-switch {
     margin-top: 5px;
   }
+}
+
+/* Light theme overrides */
+body.light-theme {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+body.light-theme h2 {
+  color: #333333;
+}
+
+body.light-theme .tip {
+  color: #666;
+}
+
+body.light-theme .slider {
+  background-color: #ddd;
+}
+
+body.light-theme input:checked + .slider {
+  background-color: #e94560;
+}
+
+body.light-theme .report-button {
+  background-color: #f0f0f0;
+  color: #333333;
+}
+
+body.light-theme .report-button:hover {
+  background-color: #e94560;
+  color: #ffffff;
 }

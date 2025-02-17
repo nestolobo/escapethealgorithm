@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!--
   Escape the Algorithm - Popup Settings
-  This file provides the UI for enabling/disabling content blocking on various social media platforms.
+  This file provides the UI for enabling/disabling content blocking on various social media platforms,
+  and includes a theme toggle for light/dark mode.
   Inline comments explain the functionality.
   Licensed under MIT. See LICENSE for details.
 -->
@@ -26,7 +27,6 @@
     <div class="site-toggle">
       <span class="site-name">YouTube</span>
       <label class="toggle-switch">
-        <!-- ARIA attributes added for accessibility; role "switch" is used and aria-checked set based on state -->
         <input
           type="checkbox"
           id="youtube-toggle"
@@ -98,6 +98,21 @@
           aria-label="Toggle TikTok"
           role="switch"
           aria-checked="true"
+        />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Toggle for Theme (Dark/Light) -->
+    <div class="site-toggle">
+      <span class="site-name">Dark Theme</span>
+      <label class="toggle-switch">
+        <input
+          type="checkbox"
+          id="theme-toggle"
+          aria-label="Toggle dark theme"
+          role="switch"
+          aria-checked="false"
         />
         <span class="slider"></span>
       </label>

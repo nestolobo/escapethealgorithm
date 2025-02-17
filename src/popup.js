@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Get toggle elements for each supported platform
+  // Cache references to the toggle elements for social media platforms.
   const toggles = {
     youtube: document.getElementById("youtube-toggle"),
     facebook: document.getElementById("facebook-toggle"),
@@ -8,30 +8,48 @@ document.addEventListener("DOMContentLoaded", () => {
     tiktok: document.getElementById("tiktok-toggle"),
   };
 
-  // Get the "Report Issue" button element
+  // Cache reference to the "Report Issue" button.
   const reportButton = document.getElementById("report-button");
 
-  /**
-   * Load saved settings from chrome.storage and update toggle states.
-   * If a setting is not explicitly false, the toggle defaults to checked.
-   */
-  chrome.storage.sync.get(
-    ["youtube", "facebook", "instagram", "twitter", "tiktok"],
-    (result) => {
-      for (const site in toggles) {
-        toggles[site].checked = result[site] !== false;
-        toggles[site].setAttribute(
-          "aria-checked",
-          toggles[site].checked.toString()
-        );
-      }
-    }
-  );
+  // Cache reference to the theme toggle element (assumes it's added in popup.html).
+  const themeToggle = document.getElementById("theme-toggle");
 
   /**
-   * Animate the toggle slider to provide visual feedback.
-   * @param {HTMLElement} slider - The slider element next to the checkbox.
-   * @param {boolean} isChecked - The current checked state of the toggle.
+   * Applies the specified theme by setting CSS classes on the document body.
+   * @param {string} theme - "dark" or "light".
+   */
+  const applyTheme = (theme) => {
+    if (theme === "dark") {
+      document.body.classList.add("dark-theme");
+      document.body.classList.remove("light-theme");
+    } else {
+      document.body.classList.add("light-theme");
+      document.body.classList.remove("dark-theme");
+    }
+  };
+
+  /**
+   * Saves a setting to chrome.storage.sync with error handling.
+   * @param {string} key - The storage key.
+   * @param {any} value - The value to save.
+   */
+  const saveSetting = (key, value) => {
+    const setting = {};
+    setting[key] = value;
+    chrome.storage.sync.set(setting, () => {
+      if (chrome.runtime.lastError) {
+        console.error(
+          `Error saving ${key} setting:`,
+          chrome.runtime.lastError.message
+        );
+      }
+    });
+  };
+
+  /**
+   * Animates the slider element for visual feedback on toggle change.
+   * @param {HTMLElement} slider - The slider element adjacent to the checkbox.
+   * @param {boolean} isChecked - The new state of the toggle.
    */
   const animateSlider = (slider, isChecked) => {
     slider.style.transition = "background-color 0.3s, transform 0.3s";
@@ -42,24 +60,72 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /**
-   * Listen for changes on each toggle:
-   * - Save the new state to chrome.storage.
-   * - Update the aria-checked attribute for accessibility.
-   * - Animate the slider for visual feedback.
+   * Loads saved settings from chrome.storage.sync and updates the UI.
    */
+  const loadSettings = () => {
+    chrome.storage.sync.get(
+      ["youtube", "facebook", "instagram", "twitter", "tiktok", "theme"],
+      (result) => {
+        if (chrome.runtime.lastError) {
+          console.error(
+            "Error loading settings:",
+            chrome.runtime.lastError.message
+          );
+          return;
+        }
+        // Update social media toggles.
+        for (const site in toggles) {
+          const isChecked = result[site] !== false;
+          toggles[site].checked = isChecked;
+          toggles[site].setAttribute("aria-checked", isChecked.toString());
+        }
+        // Load theme setting, or default to system preference.
+        let theme = result.theme;
+        if (!theme) {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        applyTheme(theme);
+        if (themeToggle) {
+          themeToggle.checked = theme === "dark";
+          themeToggle.setAttribute(
+            "aria-checked",
+            themeToggle.checked.toString()
+          );
+        }
+      }
+    );
+  };
+
+  // Initialize settings on load.
+  loadSettings();
+
+  // Add change event listeners for each social media toggle.
   for (const site in toggles) {
     toggles[site].addEventListener("change", function () {
-      chrome.storage.sync.set({ [site]: this.checked });
-      this.setAttribute("aria-checked", this.checked.toString());
+      const isChecked = this.checked;
+      saveSetting(site, isChecked);
+      this.setAttribute("aria-checked", isChecked.toString());
       const slider = this.nextElementSibling;
       if (slider) {
-        animateSlider(slider, this.checked);
+        animateSlider(slider, isChecked);
       }
     });
   }
 
+  // Add change event listener for the theme toggle if it exists.
+  if (themeToggle) {
+    themeToggle.addEventListener("change", function () {
+      const newTheme = this.checked ? "dark" : "light";
+      applyTheme(newTheme);
+      this.setAttribute("aria-checked", this.checked.toString());
+      saveSetting("theme", newTheme);
+    });
+  }
+
   /**
-   * Open the default email client to report an issue when the report button is clicked.
+   * Opens the user's default email client to report an issue.
    */
   reportButton.addEventListener("click", () => {
     const emailAddress = "glitchfix@escapethealgorithm.org";
@@ -71,9 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.tabs.create({ url: mailtoLink });
   });
 
-  /**
-   * Add hover animations to the report button for enhanced user feedback.
-   */
+  // Add hover animations for the report button.
   reportButton.addEventListener("mouseover", function () {
     this.style.transform = "translateY(-2px) rotate(2deg)";
   });

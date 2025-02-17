@@ -19,6 +19,7 @@ module.exports = (env, argv) => {
         patterns: [
           { from: `platform_specific/${browser}/manifest.json` },
           { from: "src/popup.html" },
+          { from: "src/popup.css" },
           { from: "src/styles.css" },
           { from: "src/icons", to: "icons" },
         ],
