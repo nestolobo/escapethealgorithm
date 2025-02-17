@@ -6,7 +6,7 @@ A FREE and OPEN-SOURCE browser extension to break free from social media addicti
 
 ## Features
 
-- 🚫 Block feeds on YouTube, X/Twitter, Facebook, Instagram, and TikTok
+- 🚫 Block feeds on YouTube, X, Facebook, Instagram, and TikTok (and more in the future)
 - ⚡ Toggle content visibility with one click
 - 🎯 Customize which platforms to block
 - 🎥 Disable YouTube autoplay
@@ -29,21 +29,21 @@ A FREE and OPEN-SOURCE browser extension to break free from social media addicti
 - Node.js 14+
 - npm 6+
 
-### Quick Start
+## Quick Start
 
-# Clone the repository
+### Clone the repository
 
 git clone https://github.com/username/escapethealgorithm.git
 
-# Install dependencies
+### Install dependencies
 
 npm install
 
-# Build for Chrome
+### Build for Chrome
 
 npm run build:chrome
 
-# Build for Firefox
+### Build for Firefox
 
 npm run build:firefox
 
