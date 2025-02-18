@@ -912,10 +912,6 @@ function handleYoutubeNavigation() {
   }
 }
 
-// if (getCurrentSite() === 'youtube') {
-//     window.addEventListener('yt-navigate-finish', handleYoutubeNavigation);
-// }
-
 function periodicShortsCheck() {
   if (getCurrentSite() === "youtube") {
     const shortsContainer = document.querySelector(
