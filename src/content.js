@@ -97,7 +97,7 @@ const sites = {
   twitter: {
     // Targets main feed and sidebar content
     // Preserves tweet composition box and search functionality
-    // Allows certain pages to show content (notifications, messages, profiles, single tweets)
+    // Allows certain pages to show content notifications, messages, profiles, single tweets
     // Provides helper functions to identify different page types
 
     selectors: [

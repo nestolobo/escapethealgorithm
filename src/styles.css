@@ -2,9 +2,7 @@
   display: none;
 }*/
 
-[role="main"] > div {
-  display: none !important;
-}
+
 
 @keyframes sparkle {
   0% {
