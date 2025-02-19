@@ -28,8 +28,15 @@ function showBody() {
   document.body.style.display = "";
 }
 
+//This code defines a configuration object called sites that specifies how to handle content blocking for different social media platforms.
+// The selectors and functions are used in conjunction with DOM manipulation to hide distracting content while preserving the core functionality of each platform.
+
 const sites = {
   youtube: {
+// Defines selectors for different types of content (main feed, end screens, shorts, sidebar)
+// Disables autoplay functionality
+// Allows certain pages to show content (videos and subscription feeds)
+// Detects if user is on a Shorts page
     selectorGroups: [
       {
         name: "main-feed",
@@ -88,6 +95,11 @@ const sites = {
     },
   },
   twitter: {
+    // Targets main feed and sidebar content
+    // Preserves tweet composition box and search functionality
+    // Allows certain pages to show content (notifications, messages, profiles, single tweets)
+    // Provides helper functions to identify different page types
+
     selectors: [
       {
         name: "main-feed",
@@ -138,6 +150,8 @@ const sites = {
     },
   },
   facebook: {
+    // Has a function to identify and target the news feed
+    // Uses complex DOM traversal to find feed content due to Facebook's dynamic structure
     getNewsfeed: function () {
       const mainContent = document.querySelector('div[role="main"]');
       if (!mainContent) return null;
@@ -154,9 +168,12 @@ const sites = {
     },
   },
   instagram: {
+    // Simple selectors to target the main feed and menu content
     selectors: ['div[role="menu"]', 'main[role="main"] > div > div'],
   },
   tiktok: {
+    // Targets main feed, explore feed, and live feed content
+    // Blocks all pages by default (most restrictive) 
     selectorGroups: [
       {
         name: "main-feed",
