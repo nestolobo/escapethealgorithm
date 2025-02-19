@@ -97,7 +97,7 @@ const sites = {
   twitter: {
     // Targets main feed and sidebar content
     // Preserves tweet composition box and search functionality
-    // Allows certain pages to show content notifications, messages, profiles, single tweets
+    // Allows certain pages to show content -- notifications, messages, profiles, single tweets
     // Provides helper functions to identify different page types
 
     selectors: [
@@ -195,6 +195,13 @@ const sites = {
 };
 
 function getCurrentSite() {
+/**
+ * Determines which supported social media site the user is currently on
+ * by checking the hostname of the current URL.
+ * 
+ * returns the identifier for the current site ('youtube', 'facebook', etc.) or null if the site is not supported
+ */
+
   if (window.location.hostname.includes("youtube.com")) return "youtube";
   if (window.location.hostname.includes("facebook.com")) return "facebook";
   if (window.location.hostname.includes("instagram.com")) return "instagram";
@@ -208,6 +215,12 @@ function getCurrentSite() {
 }
 
 function checkSiteEnabled() {
+  /**
+   * Checks if the current site is enabled in the extension's popup
+   * and updates the siteEnabled variable accordingly.
+   * If the site is not enabled, it shows all content and updates the toggle button.
+   */
+
   const currentSite = getCurrentSite();
   if (currentSite) {
     const storage = chrome.storage || browser.storage;
@@ -234,9 +247,17 @@ function checkSiteEnabled() {
 }
 
 function initializeSite() {
+  /**
+   * Initializes the site-specific content hiding and toggle button creation.
+   * 
+   * If the site is not enabled, it returns immediately.
+   * Otherwise, it checks the current site and performs the appropriate actions.
+   */
+
   if (!siteEnabled) return;
 
   const currentSite = getCurrentSite();
+    // YOUTUBE HANDLING
   if (currentSite === "youtube") {
     if (sites.youtube.isShortsPage()) {
       hideYoutubeShorts();
@@ -415,6 +436,7 @@ function initializeSite() {
 }
 
 function showAllContent() {
+
   const currentSite = getCurrentSite();
   if (currentSite === "youtube") {
     sites.youtube.selectorGroups.forEach((group) => {
