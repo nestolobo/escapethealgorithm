@@ -203,15 +203,28 @@ function getCurrentSite() {
  * returns the identifier for the current site ('youtube', 'facebook', etc.) or null if the site is not supported
  */
 
-  if (window.location.hostname.includes("youtube.com")) return "youtube";
-  if (window.location.hostname.includes("facebook.com")) return "facebook";
-  if (window.location.hostname.includes("instagram.com")) return "instagram";
+  const hostname = window.location.hostname;
+
+  if (hostname === "youtube.com" || hostname === "www.youtube.com") {
+    return "youtube";
+  }
+  if (hostname === "facebook.com" || hostname === "www.facebook.com") {
+    return "facebook";
+  }
+  if (hostname === "instagram.com" || hostname === "www.instagram.com") {
+    return "instagram";
+  }
   if (
-    window.location.hostname.includes("twitter.com") ||
-    window.location.hostname.includes("x.com")
-  )
+    hostname === "twitter.com" ||
+    hostname === "www.twitter.com" ||
+    hostname === "x.com" ||
+    hostname === "www.x.com"
+  ) {
     return "twitter";
-  if (window.location.hostname.includes("tiktok.com")) return "tiktok";
+  }
+  if (hostname === "tiktok.com" || hostname === "www.tiktok.com") {
+    return "tiktok";
+  }
   return null;
 }
 
