@@ -24,9 +24,51 @@ import browser from "webextension-polyfill";
 let isContentHidden = true;
 let siteEnabled = true;
 let hardcoreMode = false;
+let countdownInterval = null;
+let countdownSeconds = 600; // 10 minutes
 
 function showBody() {
   document.body.style.display = "";
+}
+
+function formatCountdown(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function updateCountdownDisplay() {
+  const el = document.querySelector(".algorithm-escape-countdown");
+  if (el) {
+    el.textContent = formatCountdown(countdownSeconds);
+  }
+}
+
+function startCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownSeconds = 600;
+  updateCountdownDisplay();
+  countdownInterval = setInterval(() => {
+    countdownSeconds--;
+    updateCountdownDisplay();
+    if (countdownSeconds <= 0) {
+      isContentHidden = true;
+      const currentSite = getCurrentSite();
+      hideOrShowContent(currentSite === "youtube" ? "main-feed" : currentSite);
+      const button = document.querySelector(".algorithm-escape-toggle");
+      updateToggleButton(button);
+      stopCountdown();
+    }
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  countdownSeconds = 600;
+  updateCountdownDisplay();
 }
 
 //This code defines a configuration object called sites that specifies how to handle content blocking for different social media platforms.
@@ -279,6 +321,7 @@ function checkSiteEnabled() {
         showBody(); // Always show the body
         if (!siteEnabled) {
           showAllContent();
+          stopCountdown();
         } else {
           initializeSite();
         }
@@ -664,9 +707,20 @@ function createToggleButton(element, groupName, fixed = false) {
     container.style.display = "none";
   });
 
+  const countdown = document.createElement("p");
+  countdown.className = "algorithm-escape-countdown";
+  countdown.textContent = formatCountdown(countdownSeconds);
+  Object.assign(countdown.style, {
+    color: textColor,
+    margin: "5px 0 0",
+    fontSize: "11px",
+    display: isContentHidden ? "none" : "",
+  });
+
   container.appendChild(closeButton);
   container.appendChild(button);
   container.appendChild(text);
+  container.appendChild(countdown);
 
   const currentSite = getCurrentSite();
 
@@ -715,12 +769,14 @@ async function toggleContent(groupName) {
     // If content is already shown, hide it without confirmation
     isContentHidden = true;
     hideOrShowContent(groupName);
+    stopCountdown();
   } else {
     // If content is hidden, show confirmation modal
     const shouldShow = await createModal();
     if (shouldShow) {
       isContentHidden = false;
       hideOrShowContent(groupName);
+      startCountdown();
     }
   }
   const currentSite = getCurrentSite();
@@ -746,6 +802,12 @@ function updateToggleButton(button) {
     text.textContent = isContentHidden
       ? "You are escaping the algorithm 😎"
       : "Don't get sucked in 😱";
+    const countdown = button
+      .closest(".algorithm-escape-toggle-container")
+      ?.querySelector(".algorithm-escape-countdown");
+    if (countdown) {
+      countdown.style.display = isContentHidden ? "none" : "";
+    }
   }
 }
 
@@ -1100,9 +1162,11 @@ storage.onChanged.addListener(function (changes, namespace) {
     if (key === getCurrentSite()) {
       siteEnabled = changes[key].newValue !== false;
       if (siteEnabled) {
+        isContentHidden = true;
         initializeSite();
       } else {
         showAllContent();
+        stopCountdown();
       }
     }
     if (key === "hardcore") {
