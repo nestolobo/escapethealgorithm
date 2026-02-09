@@ -193,6 +193,31 @@ const sites = {
       return false; // Block all pages by default
     },
   },
+  pinterest: {
+    selectorGroups: [
+      {
+        name: "main-feed",
+        selector:
+          '[data-test-id="homefeed"], [data-test-id="pinGrid"], div[role="main"] > div > div > div',
+      },
+      {
+        name: "explore-feed",
+        selector: '[data-test-id="search-guide-feed"]',
+      },
+    ],
+    isAllowedPage: function () {
+      const path = window.location.pathname;
+      return (
+        path.startsWith("/pin/") ||
+        path.startsWith("/search/") ||
+        path.startsWith("/settings/") ||
+        (path !== "/" &&
+          path !== "" &&
+          !path.startsWith("/ideas/") &&
+          !path.startsWith("/today"))
+      );
+    },
+  },
 };
 
 function getCurrentSite() {
@@ -224,6 +249,13 @@ function getCurrentSite() {
   }
   if (hostname === "tiktok.com" || hostname === "www.tiktok.com") {
     return "tiktok";
+  }
+  if (
+    hostname === "pinterest.com" ||
+    hostname === "www.pinterest.com" ||
+    hostname.endsWith(".pinterest.com")
+  ) {
+    return "pinterest";
   }
   return null;
 }
@@ -448,6 +480,29 @@ function initializeSite() {
 
       pauseAllVideos();
     }
+  } else if (currentSite === "pinterest") {
+    if (!sites.pinterest.isAllowedPage()) {
+      let contentFound = false;
+
+      sites.pinterest.selectorGroups.forEach((group) => {
+        const elements = document.querySelectorAll(group.selector);
+        if (elements.length > 0) {
+          contentFound = true;
+          elements.forEach((element) => {
+            element.style.display = isContentHidden ? "none" : "";
+          });
+        }
+      });
+
+      if (
+        contentFound &&
+        !document.querySelector(
+          '.algorithm-escape-toggle-container[data-group="pinterest"]'
+        )
+      ) {
+        createToggleButton(document.body, "pinterest", true);
+      }
+    }
   }
 }
 
@@ -491,6 +546,13 @@ function showAllContent() {
       const elements = document.querySelectorAll(selector);
       elements.forEach((element) => {
         element.classList.remove("hidden-by-extension");
+      });
+    });
+  } else if (currentSite === "pinterest") {
+    sites.pinterest.selectorGroups.forEach((group) => {
+      const elements = document.querySelectorAll(group.selector);
+      elements.forEach((element) => {
+        element.style.display = "";
       });
     });
   }
@@ -621,7 +683,7 @@ function createToggleButton(element, groupName, fixed = false) {
         );
       }
     }
-  } else if (currentSite === "instagram" || currentSite === "tiktok") {
+  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest") {
     document.body.appendChild(container);
   } else if (element) {
     element.parentNode.insertBefore(container, element);
@@ -899,6 +961,20 @@ function hideOrShowContent(groupName) {
     }
     const button = document.querySelector(
       '.algorithm-escape-toggle-container[data-group="tiktok"] .algorithm-escape-toggle'
+    );
+    updateToggleButton(button);
+  } else if (currentSite === "pinterest") {
+    if (sites.pinterest.isAllowedPage()) {
+      return;
+    }
+    sites.pinterest.selectorGroups.forEach((group) => {
+      const elements = document.querySelectorAll(group.selector);
+      elements.forEach((element) => {
+        element.style.display = isContentHidden ? "none" : "";
+      });
+    });
+    const button = document.querySelector(
+      '.algorithm-escape-toggle-container[data-group="pinterest"] .algorithm-escape-toggle'
     );
     updateToggleButton(button);
   }

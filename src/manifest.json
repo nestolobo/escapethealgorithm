@@ -18,7 +18,8 @@
         "*://*.instagram.com/*",
         "*://*.twitter.com/*",
         "*://*.x.com/*",
-        "*://*.tiktok.com/*"
+        "*://*.tiktok.com/*",
+        "*://*.pinterest.com/*"
       ],
       "css": ["styles.css"],
       "js": ["content.js"]

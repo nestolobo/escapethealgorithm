@@ -8,7 +8,8 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       tab.url.includes("instagram.com") ||
       tab.url.includes("twitter.com") ||
       tab.url.includes("x.com") ||
-      tab.url.includes("tiktok.com")
+      tab.url.includes("tiktok.com") ||
+      tab.url.includes("pinterest.com")
     ) {
       browser.tabs
         .sendMessage(tabId, { action: "pageChanged" })

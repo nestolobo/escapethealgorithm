@@ -7,7 +7,8 @@
     "*://*.instagram.com/*",
     "*://*.twitter.com/*",
     "*://*.x.com/*",
-    "*://*.tiktok.com/*"
+    "*://*.tiktok.com/*",
+    "*://*.pinterest.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
