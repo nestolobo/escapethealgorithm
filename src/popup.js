@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     instagram: document.getElementById("instagram-toggle"),
     twitter: document.getElementById("twitter-toggle"),
     tiktok: document.getElementById("tiktok-toggle"),
+    hardcore: document.getElementById("hardcore-toggle"),
   };
 
   // Cache reference to the "Report Issue" button.
@@ -64,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const loadSettings = () => {
     chrome.storage.sync.get(
-      ["youtube", "facebook", "instagram", "twitter", "tiktok", "theme"],
+      ["youtube", "facebook", "instagram", "twitter", "tiktok", "hardcore", "theme"],
       (result) => {
         if (chrome.runtime.lastError) {
           console.error(
@@ -73,12 +74,17 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           return;
         }
-        // Update social media toggles.
+        // Update social media toggles (default to true/checked).
         for (const site in toggles) {
+          if (site === "hardcore") continue; // Handle hardcore separately
           const isChecked = result[site] !== false;
           toggles[site].checked = isChecked;
           toggles[site].setAttribute("aria-checked", isChecked.toString());
         }
+        // Hardcore mode defaults to false/unchecked.
+        const hardcoreEnabled = result.hardcore === true;
+        toggles.hardcore.checked = hardcoreEnabled;
+        toggles.hardcore.setAttribute("aria-checked", hardcoreEnabled.toString());
         // Load theme setting, or default to system preference.
         let theme = result.theme;
         if (!theme) {

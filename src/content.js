@@ -23,6 +23,7 @@ import browser from "webextension-polyfill";
 
 let isContentHidden = true;
 let siteEnabled = true;
+let hardcoreMode = false;
 
 function showBody() {
   document.body.style.display = "";
@@ -218,6 +219,7 @@ function checkSiteEnabled() {
   /**
    * Checks if the current site is enabled in the extension's popup
    * and updates the siteEnabled variable accordingly.
+   * Also checks if hardcore mode is enabled.
    * If the site is not enabled, it shows all content and updates the toggle button.
    */
 
@@ -225,9 +227,10 @@ function checkSiteEnabled() {
   if (currentSite) {
     const storage = chrome.storage || browser.storage;
     storage.sync
-      .get(currentSite)
+      .get([currentSite, "hardcore"])
       .then((result) => {
         siteEnabled = result[currentSite] !== false;
+        hardcoreMode = result.hardcore === true;
         showBody(); // Always show the body
         if (!siteEnabled) {
           showAllContent();
@@ -239,6 +242,7 @@ function checkSiteEnabled() {
         console.error("Error accessing storage:", error);
         showBody(); // Always show the body
         siteEnabled = true;
+        hardcoreMode = false;
         initializeSite();
       });
   } else {
@@ -247,13 +251,12 @@ function checkSiteEnabled() {
 }
 
 function initializeSite() {
-  /**
-   * Initializes the site-specific content hiding and toggle button creation.
-   * 
-   * If the site is not enabled, it returns immediately.
-   * Otherwise, it checks the current site and performs the appropriate actions.
-   */
-
+  // This function is the main initialization logic for the extension, handling content hiding for each supported social media platform. Each platform section has specific logic for:
+  // Identifying content to hide
+  // Creating toggle buttons
+  // Preserving essential functionality (like compose/search)
+  // Handling dynamic content loading
+  // Managing platform-specific features (like video autoplay)
   if (!siteEnabled) return;
 
   const currentSite = getCurrentSite();
@@ -486,6 +489,9 @@ function showAllContent() {
 }
 
 function createToggleButton(element, groupName, fixed = false) {
+  // In hardcore mode, don't create any toggle buttons
+  if (hardcoreMode) return null;
+
   let container = document.querySelector(
     `.algorithm-escape-toggle-container[data-group="${groupName}"]`
   );
@@ -612,10 +618,9 @@ function createToggleButton(element, groupName, fixed = false) {
 
   button.addEventListener("click", () => toggleContent(groupName));
 
-  // Trigger animation after a short delay
+  // Trigger fade-in after a short delay
   setTimeout(() => {
     container.style.opacity = "1";
-    addSparkle(container);
   }, 100);
 
   // Add subtle scale effect to the button
@@ -628,25 +633,6 @@ function createToggleButton(element, groupName, fixed = false) {
   });
 
   return button;
-}
-
-function addSparkle(container) {
-  const sparkleCount = 5;
-  for (let i = 0; i < sparkleCount; i++) {
-    const sparkle = document.createElement("div");
-    Object.assign(sparkle.style, {
-      position: "absolute",
-      width: "2px",
-      height: "2px",
-      borderRadius: "50%",
-      backgroundColor: "#e94560",
-      top: Math.random() * 100 + "%",
-      left: Math.random() * 100 + "%",
-      opacity: 0,
-      animation: `sparkle 0.8s ease-in-out ${Math.random() * 0.5}s`,
-    });
-    container.appendChild(sparkle);
-  }
 }
 
 async function toggleContent(groupName) {
@@ -1028,6 +1014,17 @@ storage.onChanged.addListener(function (changes, namespace) {
         initializeSite();
       } else {
         showAllContent();
+      }
+    }
+    if (key === "hardcore") {
+      hardcoreMode = changes[key].newValue === true;
+      // Remove existing toggle buttons when hardcore mode is enabled
+      if (hardcoreMode) {
+        const buttons = document.querySelectorAll(".algorithm-escape-toggle-container");
+        buttons.forEach((button) => button.remove());
+      } else if (siteEnabled) {
+        // Re-initialize to create toggle buttons when hardcore mode is disabled
+        initializeSite();
       }
     }
   }
