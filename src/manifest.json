@@ -19,7 +19,8 @@
         "*://*.twitter.com/*",
         "*://*.x.com/*",
         "*://*.tiktok.com/*",
-        "*://*.pinterest.com/*"
+        "*://*.pinterest.com/*",
+        "*://*.linkedin.com/*"
       ],
       "css": ["styles.css"],
       "js": ["content.js"]

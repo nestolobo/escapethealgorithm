@@ -9,7 +9,8 @@
     "*://*.twitter.com/*",
     "*://*.x.com/*",
     "*://*.tiktok.com/*",
-    "*://*.pinterest.com/*"
+    "*://*.pinterest.com/*",
+    "*://*.linkedin.com/*"
   ],
   "browser_action": {
     "default_popup": "popup.html",

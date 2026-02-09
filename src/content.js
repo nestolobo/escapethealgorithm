@@ -260,6 +260,27 @@ const sites = {
       );
     },
   },
+  linkedin: {
+    selectorGroups: [
+      {
+        name: "main-feed",
+        selector:
+          ".scaffold-finite-scroll__content, .scaffold-layout__main .feed-shared-update-v2, .scaffold-layout__main",
+      },
+    ],
+    isAllowedPage: function () {
+      const path = window.location.pathname;
+      return (
+        path.startsWith("/notifications") ||
+        path.startsWith("/messaging") ||
+        path.startsWith("/in/") ||
+        path.startsWith("/jobs") ||
+        path.startsWith("/mynetwork") ||
+        path.startsWith("/settings") ||
+        path.startsWith("/company/")
+      );
+    },
+  },
 };
 
 function getCurrentSite() {
@@ -298,6 +319,9 @@ function getCurrentSite() {
     hostname.endsWith(".pinterest.com")
   ) {
     return "pinterest";
+  }
+  if (hostname === "linkedin.com" || hostname === "www.linkedin.com") {
+    return "linkedin";
   }
   return null;
 }
@@ -546,6 +570,29 @@ function initializeSite() {
         createToggleButton(document.body, "pinterest", true);
       }
     }
+  } else if (currentSite === "linkedin") {
+    if (!sites.linkedin.isAllowedPage()) {
+      let contentFound = false;
+
+      sites.linkedin.selectorGroups.forEach((group) => {
+        const elements = document.querySelectorAll(group.selector);
+        if (elements.length > 0) {
+          contentFound = true;
+          elements.forEach((element) => {
+            element.style.display = isContentHidden ? "none" : "";
+          });
+        }
+      });
+
+      if (
+        contentFound &&
+        !document.querySelector(
+          '.algorithm-escape-toggle-container[data-group="linkedin"]'
+        )
+      ) {
+        createToggleButton(document.body, "linkedin", true);
+      }
+    }
   }
 }
 
@@ -593,6 +640,13 @@ function showAllContent() {
     });
   } else if (currentSite === "pinterest") {
     sites.pinterest.selectorGroups.forEach((group) => {
+      const elements = document.querySelectorAll(group.selector);
+      elements.forEach((element) => {
+        element.style.display = "";
+      });
+    });
+  } else if (currentSite === "linkedin") {
+    sites.linkedin.selectorGroups.forEach((group) => {
       const elements = document.querySelectorAll(group.selector);
       elements.forEach((element) => {
         element.style.display = "";
@@ -737,7 +791,7 @@ function createToggleButton(element, groupName, fixed = false) {
         );
       }
     }
-  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest") {
+  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin") {
     document.body.appendChild(container);
   } else if (element) {
     element.parentNode.insertBefore(container, element);
@@ -1039,6 +1093,20 @@ function hideOrShowContent(groupName) {
       '.algorithm-escape-toggle-container[data-group="pinterest"] .algorithm-escape-toggle'
     );
     updateToggleButton(button);
+  } else if (currentSite === "linkedin") {
+    if (sites.linkedin.isAllowedPage()) {
+      return;
+    }
+    sites.linkedin.selectorGroups.forEach((group) => {
+      const elements = document.querySelectorAll(group.selector);
+      elements.forEach((element) => {
+        element.style.display = isContentHidden ? "none" : "";
+      });
+    });
+    const button = document.querySelector(
+      '.algorithm-escape-toggle-container[data-group="linkedin"] .algorithm-escape-toggle'
+    );
+    updateToggleButton(button);
   }
 }
 
@@ -1150,6 +1218,8 @@ setInterval(() => {
       periodicShortsCheck();
     } else if (getCurrentSite() === "tiktok") {
       periodicTikTokCheck();
+    } else if (getCurrentSite() === "linkedin") {
+      initializeSite();
     }
   }
 }, 1000);

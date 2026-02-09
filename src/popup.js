@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     twitter: document.getElementById("twitter-toggle"),
     tiktok: document.getElementById("tiktok-toggle"),
     pinterest: document.getElementById("pinterest-toggle"),
+    linkedin: document.getElementById("linkedin-toggle"),
     hardcore: document.getElementById("hardcore-toggle"),
   };
 
@@ -66,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   const loadSettings = () => {
     chrome.storage.sync.get(
-      ["youtube", "facebook", "instagram", "twitter", "tiktok", "pinterest", "hardcore", "theme"],
+      ["youtube", "facebook", "instagram", "twitter", "tiktok", "pinterest", "linkedin", "hardcore", "theme"],
       (result) => {
         if (chrome.runtime.lastError) {
           console.error(

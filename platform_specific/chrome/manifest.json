@@ -8,7 +8,8 @@
     "*://*.twitter.com/*",
     "*://*.x.com/*",
     "*://*.tiktok.com/*",
-    "*://*.pinterest.com/*"
+    "*://*.pinterest.com/*",
+    "*://*.linkedin.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
