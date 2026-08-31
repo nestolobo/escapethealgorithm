@@ -48,6 +48,27 @@ function mergeManifests(browser) {
     );
   }
 
+  if (browser === "safari") {
+    fs.copyFileSync(
+      path.join(
+        __dirname,
+        "node_modules",
+        "webextension-polyfill",
+        "dist",
+        "browser-polyfill.js"
+      ),
+      path.join(__dirname, "build", browser, "browser-polyfill.js")
+    );
+
+    const popupHtmlPath = path.join(__dirname, "build", browser, "popup.html");
+    const popupHtml = fs.readFileSync(popupHtmlPath, "utf8");
+    const injected = popupHtml.replace(
+      '<script src="popup.js"></script>',
+      '<script src="browser-polyfill.js"></script>\n    <script>if(typeof chrome==="undefined"){var chrome=browser;}</script>\n    <script src="popup.js"></script>'
+    );
+    fs.writeFileSync(popupHtmlPath, injected);
+  }
+
   createZip(browser);
 }
 
