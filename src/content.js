@@ -378,7 +378,12 @@ function initializeSite() {
       hideYoutubeShorts();
     } else if (!sites.youtube.isAllowedPage()) {
       sites.youtube.selectorGroups.forEach((group) => {
-        const elements = document.querySelectorAll(group.selector);
+        // YouTube's SPA keeps previously visited pages cached in the DOM with
+        // a [hidden] ancestor (e.g. the subscriptions grid while watching a
+        // video). Skip those so allowed pages aren't blanked on back-navigation.
+        const elements = Array.from(
+          document.querySelectorAll(group.selector)
+        ).filter((element) => !element.closest("[hidden]"));
         if (elements.length > 0) {
           elements.forEach((element) => {
             if (group.name === "shorts-feed") {
@@ -391,6 +396,8 @@ function initializeSite() {
         }
       });
       sites.youtube.additionalActions();
+    } else {
+      showYoutubeAllowedFeed();
     }
     // Always try to hide Shorts shelf
     const shortsShelf = document.querySelector("ytd-reel-shelf-renderer");
@@ -594,6 +601,26 @@ function initializeSite() {
       }
     }
   }
+}
+
+function showYoutubeAllowedFeed() {
+  // Allowed pages (subscriptions, channel videos) can arrive with the feed
+  // grid still hidden: while browsing another page, the SPA-cached grid may
+  // have been hidden by the extension. Undo that here.
+  const group = sites.youtube.selectorGroups.find(
+    (g) => g.name === "main-feed"
+  );
+  document.querySelectorAll(group.selector).forEach((element) => {
+    element.classList.remove("hidden-by-extension");
+    if (element.style.display === "none") {
+      element.style.display = "";
+    }
+  });
+  document
+    .querySelectorAll(
+      '.algorithm-escape-toggle-container[data-group="main-feed"]'
+    )
+    .forEach((container) => container.remove());
 }
 
 function showAllContent() {
@@ -974,7 +1001,10 @@ function hideOrShowContent(groupName) {
         (g) => g.name === groupName
       );
       if (group) {
-        const elements = document.querySelectorAll(group.selector);
+        // Skip elements inside SPA-cached hidden pages (see initializeSite).
+        const elements = Array.from(
+          document.querySelectorAll(group.selector)
+        ).filter((element) => !element.closest("[hidden]"));
         elements.forEach((element) => {
           element.classList.toggle("hidden-by-extension", isContentHidden);
           element.style.display = isContentHidden ? "none" : "";
