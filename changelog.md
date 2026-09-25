@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.32] - 2026-09-25
+### Changed
+- Instagram blocking is now page-aware. Only the algorithmic surfaces are hidden: the home "For you" feed, Explore, and Reels. Profiles (including your own), single posts, stories, messages, and settings are no longer blocked.
+- Instagram's native chronological "Following" and "Favorites" feeds (`/?variant=following`, `/?variant=favorites`) are allowed, and the toggle box on the blocked home feed now links to the Following feed.
+
+### Fixed
+- Instagram dropdown menus (including the native feed switcher) were hidden by a global `div[role="menu"]` selector.
+
 ## [1.0.31] - 2026-08-30
 ### Fixed
 - YouTube subscriptions page appearing empty after navigating back from a video. YouTube's SPA keeps visited pages cached in the DOM, and the extension was hiding the cached subscriptions grid while on non-allowed pages. Cached (hidden) pages are now skipped when hiding, and allowed pages actively un-hide their feed on arrival.

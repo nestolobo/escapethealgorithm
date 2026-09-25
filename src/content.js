@@ -211,8 +211,21 @@ const sites = {
     },
   },
   instagram: {
-    // Simple selectors to target the main feed and menu content
-    selectors: ['div[role="menu"]', 'main[role="main"] > div > div'],
+    // Targets the main content area on algorithmic pages (home "For you" feed, Explore, Reels)
+    // Allows profiles, single posts, stories, messages, settings, and Instagram's native
+    // chronological "Following" / "Favorites" feeds (/?variant=following, /?variant=favorites)
+    selectors: ['main[role="main"] > div > div'],
+    followingFeedUrl: "/?variant=following",
+    isAllowedPage: function () {
+      const path = window.location.pathname;
+      if (path === "/" || path === "") {
+        const variant = new URLSearchParams(window.location.search).get(
+          "variant"
+        );
+        return variant === "following" || variant === "favorites";
+      }
+      return !path.startsWith("/explore") && !path.startsWith("/reels");
+    },
   },
   tiktok: {
     // Targets main feed, explore feed, and live feed content
@@ -438,17 +451,12 @@ function initializeSite() {
     });
     facebookObserver.observe(document.body, { childList: true, subtree: true });
   } else if (currentSite === "instagram") {
-    let contentFound = false;
-
-    if (
-      contentFound &&
-      !document.querySelector(
-        '.algorithm-escape-toggle-container[data-group="instagram"]'
-      )
-    ) {
-      createToggleButton(document.body, "instagram", true);
+    if (sites.instagram.isAllowedPage()) {
+      showInstagramAllowedPage();
+      return;
     }
 
+    let contentFound = false;
     sites.instagram.selectors.forEach((selector) => {
       const elements = document.querySelectorAll(selector);
       if (elements.length > 0) {
@@ -619,6 +627,22 @@ function showYoutubeAllowedFeed() {
   document
     .querySelectorAll(
       '.algorithm-escape-toggle-container[data-group="main-feed"]'
+    )
+    .forEach((container) => container.remove());
+}
+
+function showInstagramAllowedPage() {
+  // Instagram is an SPA, so content hidden on a blocked page (e.g. the home
+  // feed) can still carry the hidden class after navigating to an allowed page
+  // like a profile. Undo that and drop the toggle button here.
+  sites.instagram.selectors.forEach((selector) => {
+    document
+      .querySelectorAll(`${selector}.hidden-by-extension`)
+      .forEach((element) => element.classList.remove("hidden-by-extension"));
+  });
+  document
+    .querySelectorAll(
+      '.algorithm-escape-toggle-container[data-group="instagram"]'
     )
     .forEach((container) => container.remove());
 }
@@ -804,6 +828,24 @@ function createToggleButton(element, groupName, fixed = false) {
   container.appendChild(countdown);
 
   const currentSite = getCurrentSite();
+
+  // Point Instagram users at the native chronological feed of accounts they follow
+  if (currentSite === "instagram") {
+    const followingLink = document.createElement("a");
+    followingLink.className = "algorithm-escape-following-link";
+    followingLink.href = sites.instagram.followingFeedUrl;
+    followingLink.textContent = "Go to Following feed →";
+    Object.assign(followingLink.style, {
+      display: "block",
+      color: buttonTextColor,
+      margin: "10px 0 0",
+      fontSize: "12px",
+      fontWeight: "bold",
+      textAlign: "center",
+      textDecoration: "none",
+    });
+    container.appendChild(followingLink);
+  }
 
   if (currentSite === "twitter") {
     const tweetBox = sites.twitter.getTweetBox();
@@ -1029,12 +1071,14 @@ function hideOrShowContent(groupName) {
       updateToggleButton(button);
     }
   } else if (currentSite === "instagram") {
-    sites.instagram.selectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        element.classList.toggle("hidden-by-extension", isContentHidden);
+    if (!sites.instagram.isAllowedPage()) {
+      sites.instagram.selectors.forEach((selector) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          element.classList.toggle("hidden-by-extension", isContentHidden);
+        });
       });
-    });
+    }
     const button = document.querySelector(
       '.algorithm-escape-toggle-container[data-group="instagram"] .algorithm-escape-toggle'
     );
