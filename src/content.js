@@ -171,9 +171,11 @@ const sites = {
       return window.location.pathname.includes("/messages");
     },
     isProfilePage: function () {
+      // A profile ("/username") or one of its tabs ("/username/media", etc.)
       return (
-        /^\/[^\/]+$/.test(window.location.pathname) &&
-        !window.location.pathname.includes("/home")
+        /^\/[^\/]+(\/(media|with_replies|likes|highlights|articles|superfollows|followers|following|verified_followers|followers_you_follow))?$/.test(
+          window.location.pathname
+        ) && !window.location.pathname.includes("/home")
       );
     },
     isSingleTweetPage: function () {
@@ -849,16 +851,17 @@ function createToggleButton(element, groupName, fixed = false) {
 
   if (currentSite === "twitter") {
     const tweetBox = sites.twitter.getTweetBox();
-    if (tweetBox) {
-      const tweetBoxContainer = tweetBox.closest(
-        '[data-testid="primaryColumn"] > div > div'
+    const tweetBoxContainer = tweetBox
+      ? tweetBox.closest('[data-testid="primaryColumn"] > div > div')
+      : null;
+    if (tweetBoxContainer) {
+      tweetBoxContainer.parentNode.insertBefore(
+        container,
+        tweetBoxContainer.nextSibling
       );
-      if (tweetBoxContainer) {
-        tweetBoxContainer.parentNode.insertBefore(
-          container,
-          tweetBoxContainer.nextSibling
-        );
-      }
+    } else {
+      // Pages without a compose box would otherwise never get a toggle button
+      document.body.appendChild(container);
     }
   } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin") {
     document.body.appendChild(container);

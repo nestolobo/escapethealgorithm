@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.33] - 2026-09-27
+### Fixed
+- X profile tabs (Media, Replies, Likes, Highlights, Articles, Followers/Following) were treated as feeds and blocked. They are now allowed like the main profile page.
+- X "Show Hidden Content" button never appeared on pages without a compose box, leaving no way to reveal blocked content. It now falls back to a floating button.
+
 ## [1.0.32] - 2026-09-25
 ### Changed
 - Instagram blocking is now page-aware. Only the algorithmic surfaces are hidden: the home "For you" feed, Explore, and Reels. Profiles (including your own), single posts, stories, messages, and settings are no longer blocked.
