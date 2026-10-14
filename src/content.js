@@ -264,8 +264,10 @@ const sites = {
     selectorGroups: [
       {
         name: "main-feed",
+        // LinkedIn's current layout uses generated class names; the
+        // data-testid is the stable hook. The rest cover the older layout.
         selector:
-          ".scaffold-finite-scroll__content, .scaffold-layout__main .feed-shared-update-v2, .scaffold-layout__main",
+          '[data-testid="mainFeed"], .scaffold-finite-scroll__content, .scaffold-layout__main .feed-shared-update-v2, .scaffold-layout__main',
       },
     ],
     isAllowedPage: function () {
