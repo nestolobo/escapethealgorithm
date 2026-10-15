@@ -197,6 +197,12 @@ const sites = {
   facebook: {
     // Has a function to identify and target the news feed
     // Uses complex DOM traversal to find feed content due to Facebook's dynamic structure
+    // Hides the whole main area on the Reels feed, which has no [role="article"] posts
+    reelsSelector: 'div[role="main"]',
+    isReelsPage: function () {
+      // The Reels tab ("/reel/?s=tab"), a single reel ("/reel/123"), or "/reels/..."
+      return /^\/reels?(\/|$)/.test(window.location.pathname);
+    },
     getNewsfeed: function () {
       const mainContent = document.querySelector('div[role="main"]');
       if (!mainContent) return null;
@@ -434,6 +440,13 @@ function initializeSite() {
       }
     }
   } else if (currentSite === "facebook") {
+    if (sites.facebook.isReelsPage()) {
+      hideFacebookReels();
+      return;
+    }
+    // Facebook is an SPA, so un-hide the main area after navigating away from Reels
+    showFacebookReelsAllowedPage();
+
     const newsfeed = sites.facebook.getNewsfeed();
     if (newsfeed && !newsfeed.classList.contains("hidden-by-extension")) {
       newsfeed.classList.add("hidden-by-extension");
@@ -635,6 +648,36 @@ function showYoutubeAllowedFeed() {
     .forEach((container) => container.remove());
 }
 
+function hideFacebookReels() {
+  const elements = document.querySelectorAll(sites.facebook.reelsSelector);
+  elements.forEach((element) => {
+    element.classList.toggle("hidden-by-extension", isContentHidden);
+  });
+  // Hidden videos keep playing sound, so pause every reel on the page too
+  document.querySelectorAll("video").forEach((video) => {
+    if (isContentHidden) {
+      video.pause();
+      video.muted = true;
+    } else {
+      video.muted = false;
+    }
+  });
+  if (elements.length > 0) {
+    createToggleButton(document.body, "facebook-reels", true);
+  }
+}
+
+function showFacebookReelsAllowedPage() {
+  document
+    .querySelectorAll(`${sites.facebook.reelsSelector}.hidden-by-extension`)
+    .forEach((element) => element.classList.remove("hidden-by-extension"));
+  document
+    .querySelectorAll(
+      '.algorithm-escape-toggle-container[data-group="facebook-reels"]'
+    )
+    .forEach((container) => container.remove());
+}
+
 function showInstagramAllowedPage() {
   // Instagram is an SPA, so content hidden on a blocked page (e.g. the home
   // feed) can still carry the hidden class after navigating to an allowed page
@@ -672,6 +715,7 @@ function showAllContent() {
     if (newsfeed) {
       newsfeed.classList.remove("hidden-by-extension");
     }
+    showFacebookReelsAllowedPage();
   } else if (currentSite === "instagram") {
     sites.instagram.selectors.forEach((selector) => {
       const elements = document.querySelectorAll(selector);
@@ -1067,6 +1111,14 @@ function hideOrShowContent(groupName) {
       sites.youtube.additionalActions();
     }
   } else if (currentSite === "facebook") {
+    if (sites.facebook.isReelsPage()) {
+      hideFacebookReels();
+      const button = document.querySelector(
+        '.algorithm-escape-toggle-container[data-group="facebook-reels"] .algorithm-escape-toggle'
+      );
+      updateToggleButton(button);
+      return;
+    }
     const newsfeed = sites.facebook.getNewsfeed();
     if (newsfeed) {
       newsfeed.classList.toggle("hidden-by-extension", isContentHidden);
@@ -1299,6 +1351,12 @@ setInterval(() => {
       periodicTikTokCheck();
     } else if (getCurrentSite() === "linkedin") {
       initializeSite();
+    } else if (
+      getCurrentSite() === "facebook" &&
+      sites.facebook.isReelsPage()
+    ) {
+      // Reels autoplay without changing the DOM, so the observer alone can miss them
+      hideFacebookReels();
     }
   }
 }, 1000);

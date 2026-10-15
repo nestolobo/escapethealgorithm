@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.34] - 2026-10-14
+### Fixed
+- Facebook Reels feed (`/reel/`, `/reels/`) was not blocked. The Reels viewer is now hidden and its videos paused, with the usual toggle to reveal it.
+- LinkedIn feed was not hidden after LinkedIn switched to generated class names. Now targets the stable `[data-testid="mainFeed"]` hook, with the old selectors kept as a fallback (thanks @SDkie, #32).
+- Builds failed with `archiver is not a function` after the archiver 8 bump. Pinned back to archiver 7.
+
 ## [1.0.33] - 2026-09-27
 ### Fixed
 - X profile tabs (Media, Replies, Likes, Highlights, Articles, Followers/Following) were treated as feeds and blocked. They are now allowed like the main profile page.
