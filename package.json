@@ -1,6 +1,6 @@
 {
   "name": "escape-the-algorithm",
-  "version": "1.0.31",
+  "version": "1.0.35",
   "description": "Browser extension to hide distracting feeds and suggested content on social media platforms",
   "author": "Ernest Wolfe",
   "license": "MIT",
@@ -16,7 +16,7 @@
     "build": "npm run build:chrome && npm run build:firefox && npm run build:safari"
   },
   "dependencies": {
-    "archiver": "^8.0.0",
+    "archiver": "^7.0.1",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
