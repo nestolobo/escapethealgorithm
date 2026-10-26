@@ -78,7 +78,7 @@ const sites = {
   youtube: {
 // Defines selectors for different types of content (main feed, end screens, shorts, sidebar)
 // Disables autoplay functionality
-// Allows certain pages to show content (videos and subscription feeds)
+// Allows certain pages to show content (videos, subscription feeds, and playlists)
 // Detects if user is on a Shorts page
     selectorGroups: [
       {
@@ -128,9 +128,16 @@ const sites = {
       }
     },
     isAllowedPage: function () {
+      const path = window.location.pathname;
       return (
-        window.location.pathname.includes("/videos") ||
-        window.location.pathname.includes("/feed/subscriptions")
+        path.includes("/videos") ||
+        path.includes("/feed/subscriptions") ||
+        // Your playlists ("/feed/playlists"), a single playlist ("/playlist?list=..."),
+        // and a channel's playlists tab ("/@channel/playlists")
+        path.includes("/playlist") ||
+        // The "You" page that links to your playlists, Watch later, and Liked videos
+        path.startsWith("/feed/you") ||
+        path.startsWith("/feed/library")
       );
     },
     isShortsPage: function () {

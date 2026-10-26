@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.35] - 2026-10-26
+### Fixed
+- YouTube playlists were blocked like the home feed. Your playlists (`/feed/playlists`), single playlists (`/playlist?list=...`, including Watch later and Liked videos), channel playlist tabs, and the "You" page are now allowed.
+
 ## [1.0.34] - 2026-10-14
 ### Fixed
 - Facebook Reels feed (`/reel/`, `/reels/`) was not blocked. The Reels viewer is now hidden and its videos paused, with the usual toggle to reveal it.
