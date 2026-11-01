@@ -166,6 +166,47 @@
       </label>
     </div>
 
+    <!-- Daily limits -->
+    <h3 class="section-title">LIMITS</h3>
+
+    <!-- Daily time budget for Twitter/X -->
+    <div class="site-toggle">
+      <label class="site-name" for="twitter-daily-limit">X Daily Limit</label>
+      <select id="twitter-daily-limit" class="limit-select">
+        <option value="0">Off</option>
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="20">20 min</option>
+        <option value="30">30 min</option>
+        <option value="60">60 min</option>
+      </select>
+    </div>
+    <p id="twitter-usage" class="usage-text"></p>
+
+    <!-- How long "Show Hidden Content" lasts before re-hiding -->
+    <div class="site-toggle">
+      <label class="site-name" for="reveal-minutes">Reveal Lasts</label>
+      <select id="reveal-minutes" class="limit-select">
+        <option value="1">1 min</option>
+        <option value="2">2 min</option>
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+      </select>
+    </div>
+
+    <!-- Max reveals per day across all sites -->
+    <div class="site-toggle">
+      <label class="site-name" for="reveals-per-day">Reveals Per Day</label>
+      <select id="reveals-per-day" class="limit-select">
+        <option value="0">Unlimited</option>
+        <option value="1">1</option>
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+      </select>
+    </div>
+
     <!-- Toggle for Theme (Dark/Light) -->
     <div class="site-toggle">
       <span class="site-name">Dark Theme</span>

@@ -25,7 +25,28 @@ let isContentHidden = true;
 let siteEnabled = true;
 let hardcoreMode = false;
 let countdownInterval = null;
-let countdownSeconds = 600; // 10 minutes
+let revealSeconds = 600; // How long revealed content stays visible, from the "revealMinutes" setting
+let countdownSeconds = revealSeconds;
+let revealsPerDay = 0; // Max reveals per day across all sites; 0 means unlimited
+let twitterDailyLimitMinutes = 0; // Daily time budget for X; 0 means no limit
+
+const USAGE_TICK_SECONDS = 5;
+const LIMIT_SETTING_KEYS = ["revealMinutes", "revealsPerDay", "twitterDailyLimit"];
+
+function todayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function applyLimitSettings(result) {
+  // Older installs have no limit settings saved, so fall back to the
+  // original 10 minute reveal window and no daily caps.
+  const revealMinutes = Number(result.revealMinutes) || 10;
+  revealSeconds = revealMinutes * 60;
+  if (!countdownInterval) countdownSeconds = revealSeconds;
+  revealsPerDay = Number(result.revealsPerDay) || 0;
+  twitterDailyLimitMinutes = Number(result.twitterDailyLimit) || 0;
+}
 
 function showBody() {
   document.body.style.display = "";
@@ -46,7 +67,7 @@ function updateCountdownDisplay() {
 
 function startCountdown() {
   if (countdownInterval) clearInterval(countdownInterval);
-  countdownSeconds = 600;
+  countdownSeconds = revealSeconds;
   updateCountdownDisplay();
   countdownInterval = setInterval(() => {
     countdownSeconds--;
@@ -67,7 +88,7 @@ function stopCountdown() {
     clearInterval(countdownInterval);
     countdownInterval = null;
   }
-  countdownSeconds = 600;
+  countdownSeconds = revealSeconds;
   updateCountdownDisplay();
 }
 
@@ -147,7 +168,7 @@ const sites = {
   twitter: {
     // Targets main feed and sidebar content
     // Preserves tweet composition box and search functionality
-    // Allows certain pages to show content -- notifications, messages, profiles, single tweets
+    // Allows certain pages to show content -- notifications, messages, bookmarks, profiles, single tweets
     // Provides helper functions to identify different page types
 
     selectors: [
@@ -166,6 +187,7 @@ const sites = {
       return (
         this.isNotificationsPage() ||
         this.isMessagesPage() ||
+        this.isBookmarksPage() ||
         this.isProfilePage() ||
         this.isSingleTweetPage() ||
         this.isTimelinePage()
@@ -177,12 +199,19 @@ const sites = {
     isMessagesPage: function () {
       return window.location.pathname.includes("/messages");
     },
+    isBookmarksPage: function () {
+      // All bookmarks ("/i/bookmarks") or a bookmark folder ("/i/bookmarks/123")
+      return window.location.pathname.startsWith("/i/bookmarks");
+    },
     isProfilePage: function () {
       // A profile ("/username") or one of its tabs ("/username/media", etc.)
       return (
         /^\/[^\/]+(\/(media|with_replies|likes|highlights|articles|superfollows|followers|following|verified_followers|followers_you_follow))?$/.test(
           window.location.pathname
-        ) && !window.location.pathname.includes("/home")
+        ) &&
+        !window.location.pathname.includes("/home") &&
+        // Explore is a single path segment like a username, but it's an algorithmic feed
+        !/^\/explore\/?$/.test(window.location.pathname)
       );
     },
     isSingleTweetPage: function () {
@@ -227,8 +256,9 @@ const sites = {
   },
   instagram: {
     // Targets the main content area on algorithmic pages (home "For you" feed, Explore, Reels)
-    // Allows profiles, single posts, stories, messages, settings, and Instagram's native
-    // chronological "Following" / "Favorites" feeds (/?variant=following, /?variant=favorites)
+    // and inside saved folders
+    // Allows profiles, single posts, stories, messages, settings, the saved folder list, and
+    // Instagram's native chronological "Following" / "Favorites" feeds (/?variant=following, /?variant=favorites)
     selectors: ['main[role="main"] > div > div'],
     followingFeedUrl: "/?variant=following",
     isAllowedPage: function () {
@@ -239,7 +269,16 @@ const sites = {
         );
         return variant === "following" || variant === "favorites";
       }
-      return !path.startsWith("/explore") && !path.startsWith("/reels");
+      return (
+        !path.startsWith("/explore") &&
+        !path.startsWith("/reels") &&
+        !this.isSavedFolderPage()
+      );
+    },
+    isSavedFolderPage: function () {
+      // A saved folder ("/username/saved/all-posts/" or
+      // "/username/saved/folder-name/123/"), but not the folder list at "/username/saved/"
+      return /^\/[^\/]+\/saved\/[^\/]+/.test(window.location.pathname);
     },
   },
   tiktok: {
@@ -392,10 +431,11 @@ function checkSiteEnabled() {
   if (currentSite) {
     const storage = chrome.storage || browser.storage;
     storage.sync
-      .get([currentSite, "hardcore"])
+      .get([currentSite, "hardcore", ...LIMIT_SETTING_KEYS])
       .then((result) => {
         siteEnabled = result[currentSite] !== false;
         hardcoreMode = result.hardcore === true;
+        applyLimitSettings(result);
         showBody(); // Always show the body
         if (!siteEnabled) {
           showAllContent();
@@ -530,6 +570,7 @@ function initializeSite() {
 
     if (sites.twitter.isAllowedPage()) {
       console.log("On an allowed Twitter page, not hiding content");
+      showTwitterAllowedPage();
       return;
     }
 
@@ -735,6 +776,20 @@ function showRedditAllowedPage() {
   });
   document
     .querySelectorAll('.algorithm-escape-toggle-container[data-group="reddit"]')
+    .forEach((container) => container.remove());
+}
+
+function showTwitterAllowedPage() {
+  // X navigates without full page loads, so posts hidden on Home can still be
+  // hidden after moving to an allowed page such as Bookmarks or a profile
+  const mainFeed = sites.twitter.selectors.find((s) => s.name === "main-feed");
+  document.querySelectorAll(mainFeed.selector).forEach((element) => {
+    if (element.style.display === "none") {
+      element.style.display = "";
+    }
+  });
+  document
+    .querySelectorAll('.algorithm-escape-toggle-container[data-group="twitter"]')
     .forEach((container) => container.remove());
 }
 
@@ -1005,9 +1060,27 @@ async function toggleContent(groupName) {
     hideOrShowContent(groupName);
     stopCountdown();
   } else {
-    // If content is hidden, show confirmation modal
-    const shouldShow = await createModal();
+    // If content is hidden, show confirmation modal unless today's reveals are used up
+    const revealUsage = await getTodayUsage("revealUsage", { count: 0 });
+    if (revealsPerDay > 0 && revealUsage.count >= revealsPerDay) {
+      await createModal({
+        message: "You've used all your reveals for today. Come back tomorrow 😎",
+        confirmText: null,
+        cancelText: "OK",
+      });
+      return;
+    }
+    const revealsLeft = revealsPerDay - revealUsage.count;
+    const shouldShow = await createModal(
+      revealsPerDay > 0
+        ? {
+            message: `Are you sure you actually want to show this content? You have ${revealsLeft} reveal${revealsLeft === 1 ? "" : "s"} left today.`,
+          }
+        : {}
+    );
     if (shouldShow) {
+      revealUsage.count++;
+      await storage.local.set({ revealUsage });
       isContentHidden = false;
       hideOrShowContent(groupName);
       startCountdown();
@@ -1045,7 +1118,11 @@ function updateToggleButton(button) {
   }
 }
 
-function createModal() {
+function createModal({
+  message = "Are you sure you actually want to show this content?",
+  confirmText = "Yes, I'm sure",
+  cancelText = "Honestly, no",
+} = {}) {
   const modal = document.createElement("div");
   modal.className = "algorithm-escape-modal";
 
@@ -1060,9 +1137,9 @@ function createModal() {
 
   modal.innerHTML = `
         <div class="algorithm-escape-modal-content">
-            <h2>Are you sure you actually want to show this content?</h2>
-            <button id="confirmShow" class="algorithm-escape-modal-button">Yes, I'm sure</button>
-            <button id="cancelShow" class="algorithm-escape-modal-button">Honestly, no</button>
+            <h2>${message}</h2>
+            ${confirmText ? `<button id="confirmShow" class="algorithm-escape-modal-button">${confirmText}</button>` : ""}
+            <button id="cancelShow" class="algorithm-escape-modal-button">${cancelText}</button>
         </div>
     `;
   document.body.appendChild(modal);
@@ -1117,7 +1194,7 @@ function createModal() {
   document.head.appendChild(modalStyle);
 
   return new Promise((resolve) => {
-    document.getElementById("confirmShow").addEventListener("click", () => {
+    document.getElementById("confirmShow")?.addEventListener("click", () => {
       modal.remove();
       modalStyle.remove();
       resolve(true);
@@ -1206,11 +1283,7 @@ function hideOrShowContent(groupName) {
     console.log("Hiding/Showing Twitter content");
     debugTwitterPageType();
 
-    if (
-      sites.twitter.isNotificationsPage() ||
-      sites.twitter.isSingleTweetPage() ||
-      sites.twitter.isProfilePage()
-    ) {
+    if (sites.twitter.isAllowedPage()) {
       console.log("On a special Twitter page, not hiding content");
       return;
     }
@@ -1389,6 +1462,7 @@ function debugTwitterPageType() {
   console.log("Single tweet page:", sites.twitter.isSingleTweetPage());
   console.log("Timeline page:", sites.twitter.isTimelinePage());
   console.log("Profile page:", sites.twitter.isProfilePage());
+  console.log("Bookmarks page:", sites.twitter.isBookmarksPage());
 }
 
 function periodicTikTokCheck() {
@@ -1451,6 +1525,17 @@ storage.onChanged.addListener(function (changes, namespace) {
         stopCountdown();
       }
     }
+    if (LIMIT_SETTING_KEYS.includes(key)) {
+      // Re-read all limit settings so one change doesn't reset the others
+      storage.sync.get(LIMIT_SETTING_KEYS).then((result) => {
+        applyLimitSettings(result);
+        enforceTwitterDailyLimit();
+      });
+    }
+    if (key === "twitterUsage") {
+      // Another X tab may have used up the budget
+      enforceTwitterDailyLimit();
+    }
     if (key === "hardcore") {
       hardcoreMode = changes[key].newValue === true;
       // Remove existing toggle buttons when hardcore mode is enabled
@@ -1475,4 +1560,104 @@ runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true; // Indicates that the response will be sent asynchronously
 });
 
+/**
+ * Daily usage counters live in storage.local as { date, ...counts } and are
+ * treated as empty once the date no longer matches today, so they reset at
+ * local midnight without any cleanup.
+ */
+async function getTodayUsage(key, emptyUsage) {
+  const result = await storage.local.get(key);
+  const usage = result[key];
+  return usage && usage.date === todayKey()
+    ? usage
+    : { date: todayKey(), ...emptyUsage };
+}
+
+function isOverTwitterDailyLimit(usage) {
+  return (
+    twitterDailyLimitMinutes > 0 &&
+    usage.seconds >= twitterDailyLimitMinutes * 60
+  );
+}
+
+async function enforceTwitterDailyLimit() {
+  if (getCurrentSite() !== "twitter") return;
+  const usage = await getTodayUsage("twitterUsage", { seconds: 0 });
+  if (isOverTwitterDailyLimit(usage)) {
+    showDailyLimitOverlay();
+  } else {
+    removeDailyLimitOverlay();
+  }
+}
+
+function showDailyLimitOverlay() {
+  pauseAllVideos();
+  if (document.querySelector(".algorithm-escape-limit-overlay")) return;
+
+  const isDarkMode =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const bgColor = isDarkMode ? "#1a1a2e" : "#ffffff";
+  const textColor = isDarkMode ? "#e0e0e0" : "#333333";
+
+  const overlay = document.createElement("div");
+  overlay.className = "algorithm-escape-limit-overlay";
+  Object.assign(overlay.style, {
+    position: "fixed",
+    inset: "0",
+    zIndex: "2147483647",
+    backgroundColor: bgColor,
+    color: textColor,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "24px",
+    textAlign: "center",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  });
+  overlay.innerHTML = `
+        <h2 style="color: #e94560; font-size: 22px; margin: 0 0 12px;">That's your ${twitterDailyLimitMinutes} minutes of X for today</h2>
+        <p style="font-size: 16px; margin: 0;">You are escaping the algorithm 😎 Come back tomorrow.</p>
+    `;
+  document.documentElement.appendChild(overlay);
+  document.documentElement.style.overflow = "hidden";
+}
+
+function removeDailyLimitOverlay() {
+  const overlay = document.querySelector(".algorithm-escape-limit-overlay");
+  if (overlay) {
+    overlay.remove();
+    document.documentElement.style.overflow = "";
+  }
+}
+
+function trackTwitterUsage() {
+  // Count time only while an X tab is on screen. Usage is tracked even with
+  // no limit set so the popup can show how much time was spent today.
+  setInterval(async () => {
+    if (document.visibilityState !== "visible") return;
+    const usage = await getTodayUsage("twitterUsage", { seconds: 0 });
+    if (isOverTwitterDailyLimit(usage)) {
+      // Re-add the overlay in case the page removed it
+      showDailyLimitOverlay();
+      return;
+    }
+    // A tab left open past midnight starts a fresh day under the limit
+    removeDailyLimitOverlay();
+    usage.seconds += USAGE_TICK_SECONDS;
+    await storage.local.set({ twitterUsage: usage });
+    if (isOverTwitterDailyLimit(usage)) showDailyLimitOverlay();
+  }, USAGE_TICK_SECONDS * 1000);
+}
+
 checkSiteEnabled();
+
+if (getCurrentSite() === "twitter") {
+  storage.sync.get(LIMIT_SETTING_KEYS).then((result) => {
+    applyLimitSettings(result);
+    enforceTwitterDailyLimit();
+  });
+  trackTwitterUsage();
+}

@@ -1,8 +1,14 @@
 # Changelog
 
-## [1.0.36] - 2026-10-31
+## [1.0.36] - 2026-11-01
 ### Added
 - Reddit support (current site and old.reddit.com). Blocks the algorithmic feeds: the home feed and its sorts (Best, Hot, New, Top, Rising), r/popular, r/all, Explore, and News, along with the "popular communities" sidebar on those pages. Subreddits, posts and comments, profiles, search, messages, and settings stay available. Can be turned off with the new Reddit toggle in the popup.
+- X Bookmarks (`/i/bookmarks` and bookmark folders) are no longer blocked.
+
+### Fixed
+- X Explore (`/explore`) was mistaken for a profile page and left unblocked. It is now blocked like the rest of Explore.
+- X posts and the floating toggle hidden on Home could stay hidden after navigating to an allowed page (a profile, Bookmarks, notifications). They are now restored on arrival.
+- The background script matched supported sites by URL substring, so unrelated sites such as dropbox.com counted as X. It now matches the hostname.
 
 ## [1.0.35] - 2026-10-26
 ### Fixed

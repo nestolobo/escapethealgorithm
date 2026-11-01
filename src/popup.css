@@ -101,6 +101,33 @@ input:checked + .slider:before {
   box-shadow: 0 0 8px rgba(233, 69, 96, 0.8);
 }
 
+/* Section heading for the limits settings */
+.section-title {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  margin: 25px 0 10px;
+  text-align: center;
+}
+
+/* Dropdowns for the limits settings */
+.limit-select {
+  background-color: #16213e;
+  color: #e94560;
+  border: 1px solid #0f3460;
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Today's X usage under the daily limit */
+.usage-text {
+  font-size: 12px;
+  color: #888;
+  margin: -10px 5px 15px;
+}
+
 /* Styling for the report issue button */
 .report-button {
   display: block;
@@ -170,4 +197,14 @@ body.light-theme .report-button {
 body.light-theme .report-button:hover {
   background-color: #e94560;
   color: #ffffff;
+}
+
+body.light-theme .limit-select {
+  background-color: #f0f0f0;
+  color: #333333;
+  border-color: #ddd;
+}
+
+body.light-theme .usage-text {
+  color: #666;
 }

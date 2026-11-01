@@ -107,8 +107,44 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
+  // Cache references to the limit dropdowns, with the value used when nothing is saved yet.
+  const limitSelects = {
+    twitterDailyLimit: { element: document.getElementById("twitter-daily-limit"), defaultValue: 0 },
+    revealMinutes: { element: document.getElementById("reveal-minutes"), defaultValue: 10 },
+    revealsPerDay: { element: document.getElementById("reveals-per-day"), defaultValue: 0 },
+  };
+  const twitterUsageText = document.getElementById("twitter-usage");
+
+  /**
+   * Loads saved limit settings and today's X usage and updates the UI.
+   */
+  const loadLimits = () => {
+    chrome.storage.sync.get(Object.keys(limitSelects), (result) => {
+      for (const key in limitSelects) {
+        const value = result[key] ?? limitSelects[key].defaultValue;
+        limitSelects[key].element.value = String(value);
+      }
+    });
+    chrome.storage.local.get("twitterUsage", (result) => {
+      // Matches todayKey() in content.js; usage from an earlier day counts as zero.
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const usage = result.twitterUsage;
+      const seconds = usage && usage.date === today ? usage.seconds : 0;
+      twitterUsageText.textContent = `X used today: ${Math.floor(seconds / 60)} min`;
+    });
+  };
+
   // Initialize settings on load.
   loadSettings();
+  loadLimits();
+
+  // Add change event listeners for each limit dropdown.
+  for (const key in limitSelects) {
+    limitSelects[key].element.addEventListener("change", function () {
+      saveSetting(key, Number(this.value));
+    });
+  }
 
   // Add change event listeners for each social media toggle.
   for (const site in toggles) {
