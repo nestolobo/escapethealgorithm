@@ -147,7 +147,7 @@ const sites = {
   twitter: {
     // Targets main feed and sidebar content
     // Preserves tweet composition box and search functionality
-    // Allows certain pages to show content -- notifications, messages, profiles, single tweets
+    // Allows certain pages to show content -- notifications, messages, bookmarks, profiles, single tweets
     // Provides helper functions to identify different page types
 
     selectors: [
@@ -166,6 +166,7 @@ const sites = {
       return (
         this.isNotificationsPage() ||
         this.isMessagesPage() ||
+        this.isBookmarksPage() ||
         this.isProfilePage() ||
         this.isSingleTweetPage() ||
         this.isTimelinePage()
@@ -177,12 +178,19 @@ const sites = {
     isMessagesPage: function () {
       return window.location.pathname.includes("/messages");
     },
+    isBookmarksPage: function () {
+      // All bookmarks ("/i/bookmarks") or a bookmark folder ("/i/bookmarks/123")
+      return window.location.pathname.startsWith("/i/bookmarks");
+    },
     isProfilePage: function () {
       // A profile ("/username") or one of its tabs ("/username/media", etc.)
       return (
         /^\/[^\/]+(\/(media|with_replies|likes|highlights|articles|superfollows|followers|following|verified_followers|followers_you_follow))?$/.test(
           window.location.pathname
-        ) && !window.location.pathname.includes("/home")
+        ) &&
+        !window.location.pathname.includes("/home") &&
+        // Explore is a single path segment like a username, but it's an algorithmic feed
+        !/^\/explore\/?$/.test(window.location.pathname)
       );
     },
     isSingleTweetPage: function () {
@@ -530,6 +538,7 @@ function initializeSite() {
 
     if (sites.twitter.isAllowedPage()) {
       console.log("On an allowed Twitter page, not hiding content");
+      showTwitterAllowedPage();
       return;
     }
 
@@ -735,6 +744,20 @@ function showRedditAllowedPage() {
   });
   document
     .querySelectorAll('.algorithm-escape-toggle-container[data-group="reddit"]')
+    .forEach((container) => container.remove());
+}
+
+function showTwitterAllowedPage() {
+  // X navigates without full page loads, so posts hidden on Home can still be
+  // hidden after moving to an allowed page such as Bookmarks or a profile
+  const mainFeed = sites.twitter.selectors.find((s) => s.name === "main-feed");
+  document.querySelectorAll(mainFeed.selector).forEach((element) => {
+    if (element.style.display === "none") {
+      element.style.display = "";
+    }
+  });
+  document
+    .querySelectorAll('.algorithm-escape-toggle-container[data-group="twitter"]')
     .forEach((container) => container.remove());
 }
 
@@ -1206,11 +1229,7 @@ function hideOrShowContent(groupName) {
     console.log("Hiding/Showing Twitter content");
     debugTwitterPageType();
 
-    if (
-      sites.twitter.isNotificationsPage() ||
-      sites.twitter.isSingleTweetPage() ||
-      sites.twitter.isProfilePage()
-    ) {
+    if (sites.twitter.isAllowedPage()) {
       console.log("On a special Twitter page, not hiding content");
       return;
     }
@@ -1389,6 +1408,7 @@ function debugTwitterPageType() {
   console.log("Single tweet page:", sites.twitter.isSingleTweetPage());
   console.log("Timeline page:", sites.twitter.isTimelinePage());
   console.log("Profile page:", sites.twitter.isProfilePage());
+  console.log("Bookmarks page:", sites.twitter.isBookmarksPage());
 }
 
 function periodicTikTokCheck() {
