@@ -311,6 +311,27 @@ const sites = {
       );
     },
   },
+  reddit: {
+    // Targets the post feed and its "popular communities" sidebar on algorithmic pages:
+    // the home feed and its sorts, r/popular, r/all, Explore, and News.
+    // Allows subreddits you chose to visit, posts, profiles, search, messages, and settings.
+    // Covers the current site (shreddit-feed) and old.reddit.com (#siteTable).
+    selectors: [
+      "main#main-content",
+      "shreddit-feed",
+      "#right-sidebar-container",
+      "#siteTable",
+    ],
+    isAllowedPage: function () {
+      const path =
+        window.location.pathname.toLowerCase().replace(/\/+$/, "") || "/";
+      return !(
+        /^\/(best|hot|new|top|rising)?$/.test(path) ||
+        /^\/r\/(popular|all)(\/|$)/.test(path) ||
+        /^\/(explore|news)(\/|$)/.test(path)
+      );
+    },
+  },
 };
 
 function getCurrentSite() {
@@ -352,6 +373,9 @@ function getCurrentSite() {
   }
   if (hostname === "linkedin.com" || hostname === "www.linkedin.com") {
     return "linkedin";
+  }
+  if (hostname === "reddit.com" || hostname.endsWith(".reddit.com")) {
+    return "reddit";
   }
   return null;
 }
@@ -632,6 +656,22 @@ function initializeSite() {
         createToggleButton(document.body, "linkedin", true);
       }
     }
+  } else if (currentSite === "reddit") {
+    if (sites.reddit.isAllowedPage()) {
+      showRedditAllowedPage();
+      return;
+    }
+
+    let contentFound = false;
+    sites.reddit.selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        contentFound = true;
+        element.classList.toggle("hidden-by-extension", isContentHidden);
+      });
+    });
+    if (contentFound) {
+      createToggleButton(document.body, "reddit", true);
+    }
   }
 }
 
@@ -682,6 +722,19 @@ function showFacebookReelsAllowedPage() {
     .querySelectorAll(
       '.algorithm-escape-toggle-container[data-group="facebook-reels"]'
     )
+    .forEach((container) => container.remove());
+}
+
+function showRedditAllowedPage() {
+  // Reddit navigates without full page loads, so content hidden on a blocked
+  // page (e.g. the home feed) can still be hidden after moving to a subreddit
+  sites.reddit.selectors.forEach((selector) => {
+    document
+      .querySelectorAll(`${selector}.hidden-by-extension`)
+      .forEach((element) => element.classList.remove("hidden-by-extension"));
+  });
+  document
+    .querySelectorAll('.algorithm-escape-toggle-container[data-group="reddit"]')
     .forEach((container) => container.remove());
 }
 
@@ -758,6 +811,8 @@ function showAllContent() {
         element.style.display = "";
       });
     });
+  } else if (currentSite === "reddit") {
+    showRedditAllowedPage();
   }
 
   const buttons = document.querySelectorAll(
@@ -916,7 +971,7 @@ function createToggleButton(element, groupName, fixed = false) {
       // Pages without a compose box would otherwise never get a toggle button
       document.body.appendChild(container);
     }
-  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin") {
+  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin" || currentSite === "reddit") {
     document.body.appendChild(container);
   } else if (element) {
     element.parentNode.insertBefore(container, element);
@@ -1243,6 +1298,19 @@ function hideOrShowContent(groupName) {
     });
     const button = document.querySelector(
       '.algorithm-escape-toggle-container[data-group="linkedin"] .algorithm-escape-toggle'
+    );
+    updateToggleButton(button);
+  } else if (currentSite === "reddit") {
+    if (sites.reddit.isAllowedPage()) {
+      return;
+    }
+    sites.reddit.selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        element.classList.toggle("hidden-by-extension", isContentHidden);
+      });
+    });
+    const button = document.querySelector(
+      '.algorithm-escape-toggle-container[data-group="reddit"] .algorithm-escape-toggle'
     );
     updateToggleButton(button);
   }

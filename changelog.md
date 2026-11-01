@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.36] - 2026-10-31
+### Added
+- Reddit support (current site and old.reddit.com). Blocks the algorithmic feeds: the home feed and its sorts (Best, Hot, New, Top, Rising), r/popular, r/all, Explore, and News, along with the "popular communities" sidebar on those pages. Subreddits, posts and comments, profiles, search, messages, and settings stay available. Can be turned off with the new Reddit toggle in the popup.
+
 ## [1.0.35] - 2026-10-26
 ### Fixed
 - YouTube playlists were blocked like the home feed. Your playlists (`/feed/playlists`), single playlists (`/playlist?list=...`, including Watch later and Liked videos), channel playlist tabs, and the "You" page are now allowed.

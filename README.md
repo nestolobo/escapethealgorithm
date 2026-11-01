@@ -6,7 +6,7 @@ A FREE and OPEN-SOURCE browser extension to break free from social media addicti
 
 ## Features
 
-- 🚫 Block feeds on YouTube, X, Facebook, Instagram, and TikTok (and more in the future)
+- 🚫 Block feeds on YouTube, X, Facebook, Instagram, TikTok, Pinterest, LinkedIn, and Reddit
 - ⚡ Toggle content visibility with one click
 - 🎯 Customize which platforms to block
 - 🎥 Disable YouTube autoplay
