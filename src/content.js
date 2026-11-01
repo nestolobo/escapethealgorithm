@@ -78,7 +78,7 @@ const sites = {
   youtube: {
 // Defines selectors for different types of content (main feed, end screens, shorts, sidebar)
 // Disables autoplay functionality
-// Allows certain pages to show content (videos and subscription feeds)
+// Allows certain pages to show content (videos, subscription feeds, and playlists)
 // Detects if user is on a Shorts page
     selectorGroups: [
       {
@@ -128,9 +128,16 @@ const sites = {
       }
     },
     isAllowedPage: function () {
+      const path = window.location.pathname;
       return (
-        window.location.pathname.includes("/videos") ||
-        window.location.pathname.includes("/feed/subscriptions")
+        path.includes("/videos") ||
+        path.includes("/feed/subscriptions") ||
+        // Your playlists ("/feed/playlists"), a single playlist ("/playlist?list=..."),
+        // and a channel's playlists tab ("/@channel/playlists")
+        path.includes("/playlist") ||
+        // The "You" page that links to your playlists, Watch later, and Liked videos
+        path.startsWith("/feed/you") ||
+        path.startsWith("/feed/library")
       );
     },
     isShortsPage: function () {
@@ -171,9 +178,11 @@ const sites = {
       return window.location.pathname.includes("/messages");
     },
     isProfilePage: function () {
+      // A profile ("/username") or one of its tabs ("/username/media", etc.)
       return (
-        /^\/[^\/]+$/.test(window.location.pathname) &&
-        !window.location.pathname.includes("/home")
+        /^\/[^\/]+(\/(media|with_replies|likes|highlights|articles|superfollows|followers|following|verified_followers|followers_you_follow))?$/.test(
+          window.location.pathname
+        ) && !window.location.pathname.includes("/home")
       );
     },
     isSingleTweetPage: function () {
@@ -195,6 +204,12 @@ const sites = {
   facebook: {
     // Has a function to identify and target the news feed
     // Uses complex DOM traversal to find feed content due to Facebook's dynamic structure
+    // Hides the whole main area on the Reels feed, which has no [role="article"] posts
+    reelsSelector: 'div[role="main"]',
+    isReelsPage: function () {
+      // The Reels tab ("/reel/?s=tab"), a single reel ("/reel/123"), or "/reels/..."
+      return /^\/reels?(\/|$)/.test(window.location.pathname);
+    },
     getNewsfeed: function () {
       const mainContent = document.querySelector('div[role="main"]');
       if (!mainContent) return null;
@@ -211,8 +226,21 @@ const sites = {
     },
   },
   instagram: {
-    // Simple selectors to target the main feed and menu content
-    selectors: ['div[role="menu"]', 'main[role="main"] > div > div'],
+    // Targets the main content area on algorithmic pages (home "For you" feed, Explore, Reels)
+    // Allows profiles, single posts, stories, messages, settings, and Instagram's native
+    // chronological "Following" / "Favorites" feeds (/?variant=following, /?variant=favorites)
+    selectors: ['main[role="main"] > div > div'],
+    followingFeedUrl: "/?variant=following",
+    isAllowedPage: function () {
+      const path = window.location.pathname;
+      if (path === "/" || path === "") {
+        const variant = new URLSearchParams(window.location.search).get(
+          "variant"
+        );
+        return variant === "following" || variant === "favorites";
+      }
+      return !path.startsWith("/explore") && !path.startsWith("/reels");
+    },
   },
   tiktok: {
     // Targets main feed, explore feed, and live feed content
@@ -283,6 +311,27 @@ const sites = {
       );
     },
   },
+  reddit: {
+    // Targets the post feed and its "popular communities" sidebar on algorithmic pages:
+    // the home feed and its sorts, r/popular, r/all, Explore, and News.
+    // Allows subreddits you chose to visit, posts, profiles, search, messages, and settings.
+    // Covers the current site (shreddit-feed) and old.reddit.com (#siteTable).
+    selectors: [
+      "main#main-content",
+      "shreddit-feed",
+      "#right-sidebar-container",
+      "#siteTable",
+    ],
+    isAllowedPage: function () {
+      const path =
+        window.location.pathname.toLowerCase().replace(/\/+$/, "") || "/";
+      return !(
+        /^\/(best|hot|new|top|rising)?$/.test(path) ||
+        /^\/r\/(popular|all)(\/|$)/.test(path) ||
+        /^\/(explore|news)(\/|$)/.test(path)
+      );
+    },
+  },
 };
 
 function getCurrentSite() {
@@ -324,6 +373,9 @@ function getCurrentSite() {
   }
   if (hostname === "linkedin.com" || hostname === "www.linkedin.com") {
     return "linkedin";
+  }
+  if (hostname === "reddit.com" || hostname.endsWith(".reddit.com")) {
+    return "reddit";
   }
   return null;
 }
@@ -419,6 +471,13 @@ function initializeSite() {
       }
     }
   } else if (currentSite === "facebook") {
+    if (sites.facebook.isReelsPage()) {
+      hideFacebookReels();
+      return;
+    }
+    // Facebook is an SPA, so un-hide the main area after navigating away from Reels
+    showFacebookReelsAllowedPage();
+
     const newsfeed = sites.facebook.getNewsfeed();
     if (newsfeed && !newsfeed.classList.contains("hidden-by-extension")) {
       newsfeed.classList.add("hidden-by-extension");
@@ -440,17 +499,12 @@ function initializeSite() {
     });
     facebookObserver.observe(document.body, { childList: true, subtree: true });
   } else if (currentSite === "instagram") {
-    let contentFound = false;
-
-    if (
-      contentFound &&
-      !document.querySelector(
-        '.algorithm-escape-toggle-container[data-group="instagram"]'
-      )
-    ) {
-      createToggleButton(document.body, "instagram", true);
+    if (sites.instagram.isAllowedPage()) {
+      showInstagramAllowedPage();
+      return;
     }
 
+    let contentFound = false;
     sites.instagram.selectors.forEach((selector) => {
       const elements = document.querySelectorAll(selector);
       if (elements.length > 0) {
@@ -602,6 +656,22 @@ function initializeSite() {
         createToggleButton(document.body, "linkedin", true);
       }
     }
+  } else if (currentSite === "reddit") {
+    if (sites.reddit.isAllowedPage()) {
+      showRedditAllowedPage();
+      return;
+    }
+
+    let contentFound = false;
+    sites.reddit.selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        contentFound = true;
+        element.classList.toggle("hidden-by-extension", isContentHidden);
+      });
+    });
+    if (contentFound) {
+      createToggleButton(document.body, "reddit", true);
+    }
   }
 }
 
@@ -621,6 +691,65 @@ function showYoutubeAllowedFeed() {
   document
     .querySelectorAll(
       '.algorithm-escape-toggle-container[data-group="main-feed"]'
+    )
+    .forEach((container) => container.remove());
+}
+
+function hideFacebookReels() {
+  const elements = document.querySelectorAll(sites.facebook.reelsSelector);
+  elements.forEach((element) => {
+    element.classList.toggle("hidden-by-extension", isContentHidden);
+  });
+  // Hidden videos keep playing sound, so pause every reel on the page too
+  document.querySelectorAll("video").forEach((video) => {
+    if (isContentHidden) {
+      video.pause();
+      video.muted = true;
+    } else {
+      video.muted = false;
+    }
+  });
+  if (elements.length > 0) {
+    createToggleButton(document.body, "facebook-reels", true);
+  }
+}
+
+function showFacebookReelsAllowedPage() {
+  document
+    .querySelectorAll(`${sites.facebook.reelsSelector}.hidden-by-extension`)
+    .forEach((element) => element.classList.remove("hidden-by-extension"));
+  document
+    .querySelectorAll(
+      '.algorithm-escape-toggle-container[data-group="facebook-reels"]'
+    )
+    .forEach((container) => container.remove());
+}
+
+function showRedditAllowedPage() {
+  // Reddit navigates without full page loads, so content hidden on a blocked
+  // page (e.g. the home feed) can still be hidden after moving to a subreddit
+  sites.reddit.selectors.forEach((selector) => {
+    document
+      .querySelectorAll(`${selector}.hidden-by-extension`)
+      .forEach((element) => element.classList.remove("hidden-by-extension"));
+  });
+  document
+    .querySelectorAll('.algorithm-escape-toggle-container[data-group="reddit"]')
+    .forEach((container) => container.remove());
+}
+
+function showInstagramAllowedPage() {
+  // Instagram is an SPA, so content hidden on a blocked page (e.g. the home
+  // feed) can still carry the hidden class after navigating to an allowed page
+  // like a profile. Undo that and drop the toggle button here.
+  sites.instagram.selectors.forEach((selector) => {
+    document
+      .querySelectorAll(`${selector}.hidden-by-extension`)
+      .forEach((element) => element.classList.remove("hidden-by-extension"));
+  });
+  document
+    .querySelectorAll(
+      '.algorithm-escape-toggle-container[data-group="instagram"]'
     )
     .forEach((container) => container.remove());
 }
@@ -646,6 +775,7 @@ function showAllContent() {
     if (newsfeed) {
       newsfeed.classList.remove("hidden-by-extension");
     }
+    showFacebookReelsAllowedPage();
   } else if (currentSite === "instagram") {
     sites.instagram.selectors.forEach((selector) => {
       const elements = document.querySelectorAll(selector);
@@ -681,6 +811,8 @@ function showAllContent() {
         element.style.display = "";
       });
     });
+  } else if (currentSite === "reddit") {
+    showRedditAllowedPage();
   }
 
   const buttons = document.querySelectorAll(
@@ -807,20 +939,39 @@ function createToggleButton(element, groupName, fixed = false) {
 
   const currentSite = getCurrentSite();
 
+  // Point Instagram users at the native chronological feed of accounts they follow
+  if (currentSite === "instagram") {
+    const followingLink = document.createElement("a");
+    followingLink.className = "algorithm-escape-following-link";
+    followingLink.href = sites.instagram.followingFeedUrl;
+    followingLink.textContent = "Go to Following feed →";
+    Object.assign(followingLink.style, {
+      display: "block",
+      color: buttonTextColor,
+      margin: "10px 0 0",
+      fontSize: "12px",
+      fontWeight: "bold",
+      textAlign: "center",
+      textDecoration: "none",
+    });
+    container.appendChild(followingLink);
+  }
+
   if (currentSite === "twitter") {
     const tweetBox = sites.twitter.getTweetBox();
-    if (tweetBox) {
-      const tweetBoxContainer = tweetBox.closest(
-        '[data-testid="primaryColumn"] > div > div'
+    const tweetBoxContainer = tweetBox
+      ? tweetBox.closest('[data-testid="primaryColumn"] > div > div')
+      : null;
+    if (tweetBoxContainer) {
+      tweetBoxContainer.parentNode.insertBefore(
+        container,
+        tweetBoxContainer.nextSibling
       );
-      if (tweetBoxContainer) {
-        tweetBoxContainer.parentNode.insertBefore(
-          container,
-          tweetBoxContainer.nextSibling
-        );
-      }
+    } else {
+      // Pages without a compose box would otherwise never get a toggle button
+      document.body.appendChild(container);
     }
-  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin") {
+  } else if (currentSite === "instagram" || currentSite === "tiktok" || currentSite === "pinterest" || currentSite === "linkedin" || currentSite === "reddit") {
     document.body.appendChild(container);
   } else if (element) {
     element.parentNode.insertBefore(container, element);
@@ -1022,6 +1173,14 @@ function hideOrShowContent(groupName) {
       sites.youtube.additionalActions();
     }
   } else if (currentSite === "facebook") {
+    if (sites.facebook.isReelsPage()) {
+      hideFacebookReels();
+      const button = document.querySelector(
+        '.algorithm-escape-toggle-container[data-group="facebook-reels"] .algorithm-escape-toggle'
+      );
+      updateToggleButton(button);
+      return;
+    }
     const newsfeed = sites.facebook.getNewsfeed();
     if (newsfeed) {
       newsfeed.classList.toggle("hidden-by-extension", isContentHidden);
@@ -1031,12 +1190,14 @@ function hideOrShowContent(groupName) {
       updateToggleButton(button);
     }
   } else if (currentSite === "instagram") {
-    sites.instagram.selectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        element.classList.toggle("hidden-by-extension", isContentHidden);
+    if (!sites.instagram.isAllowedPage()) {
+      sites.instagram.selectors.forEach((selector) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          element.classList.toggle("hidden-by-extension", isContentHidden);
+        });
       });
-    });
+    }
     const button = document.querySelector(
       '.algorithm-escape-toggle-container[data-group="instagram"] .algorithm-escape-toggle'
     );
@@ -1137,6 +1298,19 @@ function hideOrShowContent(groupName) {
     });
     const button = document.querySelector(
       '.algorithm-escape-toggle-container[data-group="linkedin"] .algorithm-escape-toggle'
+    );
+    updateToggleButton(button);
+  } else if (currentSite === "reddit") {
+    if (sites.reddit.isAllowedPage()) {
+      return;
+    }
+    sites.reddit.selectors.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => {
+        element.classList.toggle("hidden-by-extension", isContentHidden);
+      });
+    });
+    const button = document.querySelector(
+      '.algorithm-escape-toggle-container[data-group="reddit"] .algorithm-escape-toggle'
     );
     updateToggleButton(button);
   }
@@ -1252,6 +1426,12 @@ setInterval(() => {
       periodicTikTokCheck();
     } else if (getCurrentSite() === "linkedin") {
       initializeSite();
+    } else if (
+      getCurrentSite() === "facebook" &&
+      sites.facebook.isReelsPage()
+    ) {
+      // Reels autoplay without changing the DOM, so the observer alone can miss them
+      hideFacebookReels();
     }
   }
 }, 1000);

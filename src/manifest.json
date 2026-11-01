@@ -1,7 +1,7 @@
 {
   "name": "Escape the Algorithm - Social Feed Blocker",
   "short_name": "Feed Blocker",
-  "version": "1.0.31",
+  "version": "1.0.36",
   "description": "Hide distracting feeds and suggested content on YouTube, Twitter, Facebook and more to unhook your brain from social media addiction",
   "author": "Ernest Wolfe",
   "homepage_url": "https://www.escapethealgorithm.org",
@@ -20,7 +20,8 @@
         "*://*.x.com/*",
         "*://*.tiktok.com/*",
         "*://*.pinterest.com/*",
-        "*://*.linkedin.com/*"
+        "*://*.linkedin.com/*",
+        "*://*.reddit.com/*"
       ],
       "css": ["styles.css"],
       "js": ["content.js"]

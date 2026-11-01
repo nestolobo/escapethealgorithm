@@ -9,7 +9,8 @@
     "*://*.x.com/*",
     "*://*.tiktok.com/*",
     "*://*.pinterest.com/*",
-    "*://*.linkedin.com/*"
+    "*://*.linkedin.com/*",
+    "*://*.reddit.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
