@@ -1,18 +1,34 @@
 import browser from "webextension-polyfill";
 
+const SUPPORTED_DOMAINS = [
+  "youtube.com",
+  "facebook.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "tiktok.com",
+  "pinterest.com",
+  "linkedin.com",
+  "reddit.com",
+];
+
+// Match on the parsed hostname, not a substring of the URL, so that
+// e.g. "https://example.com/?reddit.com" doesn't count as Reddit
+function isSupportedSite(url) {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch {
+    return false;
+  }
+  return SUPPORTED_DOMAINS.some(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+}
+
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && tab.url) {
-    if (
-      tab.url.includes("youtube.com") ||
-      tab.url.includes("facebook.com") ||
-      tab.url.includes("instagram.com") ||
-      tab.url.includes("twitter.com") ||
-      tab.url.includes("x.com") ||
-      tab.url.includes("tiktok.com") ||
-      tab.url.includes("pinterest.com") ||
-      tab.url.includes("linkedin.com") ||
-      tab.url.includes("reddit.com")
-    ) {
+    if (isSupportedSite(tab.url)) {
       browser.tabs
         .sendMessage(tabId, { action: "pageChanged" })
         .catch((error) => {
